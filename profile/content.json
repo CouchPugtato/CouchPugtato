@@ -1,0 +1,395 @@
+{
+  "name": "Dylan Aulson",
+  "eyebrow": "COUCHPUGTATO / PROFILE",
+  "description": "I'm a Computer Science student at Boston University, minoring in Computer Engineering. I currently work as a student researcher at BU, working on AI and its applications in robotics.",
+  "footer": "Python / Rust / C / Go / ROS 2 / Gazebo / Isaac Sim / Docker",
+  "accent": "#bb8cff",
+  "duration_seconds": 10,
+  "fps": 15,
+  "github_username": "CouchPugtato",
+  "stats": [
+    {
+      "value": "976",
+      "label": "COMMITS"
+    },
+    {
+      "value": "2",
+      "label": "FOLLOWERS"
+    },
+    {
+      "value": "31",
+      "label": "PUBLIC REPOSITORIES"
+    },
+    {
+      "value": "5",
+      "label": "REPOSITORY STARS"
+    }
+  ],
+  "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
+  "languages": {
+    "Python": 2368031,
+    "C": 1793962,
+    "JavaScript": 1699221,
+    "Rust": 550100,
+    "Go": 318022,
+    "Java": 147226,
+    "Svelte": 27052,
+    "Shell": 24218,
+    "Lua": 24018,
+    "NSIS": 12496,
+    "C++": 9884,
+    "CMake": 9870,
+    "PowerShell": 6894,
+    "TypeScript": 5158,
+    "Dockerfile": 334,
+    "Batchfile": 120
+  },
+  "language_repos": {
+    "JavaScript": 13,
+    "Python": 5,
+    "Go": 4,
+    "Rust": 4,
+    "C": 3,
+    "CMake": 3,
+    "Java": 3,
+    "PowerShell": 3,
+    "Shell": 3,
+    "Batchfile": 1,
+    "C++": 1,
+    "Dockerfile": 1,
+    "Lua": 1,
+    "NSIS": 1,
+    "Svelte": 1,
+    "TypeScript": 1
+  },
+  "weekly_activity": [
+    {
+      "start": "2026-04-20",
+      "commits": 7
+    },
+    {
+      "start": "2026-04-27",
+      "commits": 0
+    },
+    {
+      "start": "2026-05-04",
+      "commits": 1
+    },
+    {
+      "start": "2026-05-11",
+      "commits": 7
+    },
+    {
+      "start": "2026-05-18",
+      "commits": 4
+    },
+    {
+      "start": "2026-05-25",
+      "commits": 2
+    },
+    {
+      "start": "2026-06-01",
+      "commits": 9
+    },
+    {
+      "start": "2026-06-08",
+      "commits": 22
+    },
+    {
+      "start": "2026-06-15",
+      "commits": 8
+    },
+    {
+      "start": "2026-06-22",
+      "commits": 40
+    },
+    {
+      "start": "2026-06-29",
+      "commits": 0
+    },
+    {
+      "start": "2026-07-06",
+      "commits": 5
+    },
+    {
+      "start": "2026-07-13",
+      "commits": 17
+    },
+    {
+      "start": "2026-07-20",
+      "commits": 5
+    },
+    {
+      "start": "2026-07-27",
+      "commits": 0
+    },
+    {
+      "start": "2026-08-03",
+      "commits": 8
+    },
+    {
+      "start": "2026-08-10",
+      "commits": 25
+    },
+    {
+      "start": "2026-08-17",
+      "commits": 8
+    },
+    {
+      "start": "2026-08-24",
+      "commits": 17
+    },
+    {
+      "start": "2026-08-31",
+      "commits": 36
+    },
+    {
+      "start": "2026-09-07",
+      "commits": 19
+    },
+    {
+      "start": "2026-09-14",
+      "commits": 10
+    },
+    {
+      "start": "2026-09-21",
+      "commits": 11
+    },
+    {
+      "start": "2026-09-28",
+      "commits": 7
+    },
+    {
+      "start": "2026-10-05",
+      "commits": 6
+    },
+    {
+      "start": "2026-10-12",
+      "commits": 36
+    }
+  ],
+  "monthly_repositories": [
+    {
+      "month": "2026-05",
+      "repositories": 2,
+      "partial": false,
+      "items": [
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-05-31",
+          "commits": 13
+        },
+        {
+          "name": "FRC-509/2026Rebuilt",
+          "last_commit": "2026-05-06",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "month": "2026-06",
+      "repositories": 2,
+      "partial": false,
+      "items": [
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-06-28",
+          "commits": 78
+        },
+        {
+          "name": "CouchPugtato/Rep-Count",
+          "last_commit": "2026-06-13",
+          "commits": 1
+        }
+      ]
+    },
+    {
+      "month": "2026-07",
+      "repositories": 1,
+      "partial": false,
+      "items": [
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-07-24",
+          "commits": 27
+        }
+      ]
+    },
+    {
+      "month": "2026-08",
+      "repositories": 1,
+      "partial": false,
+      "items": [
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-08-31",
+          "commits": 63
+        }
+      ]
+    },
+    {
+      "month": "2026-09",
+      "repositories": 4,
+      "partial": false,
+      "items": [
+        {
+          "name": "CouchPugtato/Rep-Count",
+          "last_commit": "2026-09-25",
+          "commits": 8
+        },
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-09-25",
+          "commits": 44
+        },
+        {
+          "name": "CouchPugtato/Punchcard",
+          "last_commit": "2026-09-23",
+          "commits": 15
+        },
+        {
+          "name": "CouchPugtato/Exponential-Elytra",
+          "last_commit": "2026-09-21",
+          "commits": 4
+        }
+      ]
+    },
+    {
+      "month": "2026-10",
+      "repositories": 7,
+      "partial": true,
+      "items": [
+        {
+          "name": "CouchPugtato/Statfolio-5e",
+          "last_commit": "2026-10-20",
+          "commits": 28
+        },
+        {
+          "name": "CouchPugtato/CouchPugtato",
+          "last_commit": "2026-10-20",
+          "commits": 1
+        },
+        {
+          "name": "CouchPugtato/graph-as-policy-mvp",
+          "last_commit": "2026-10-19",
+          "commits": 19
+        },
+        {
+          "name": "CouchPugtato/Vortex",
+          "last_commit": "2026-10-18",
+          "commits": 17
+        },
+        {
+          "name": "Zac1017/Red-Storm-509-T-Shirt-Cannon-Old-Version",
+          "last_commit": "2026-10-15",
+          "commits": 5
+        },
+        {
+          "name": "CouchPugtato/StormCloud",
+          "last_commit": "2026-10-15",
+          "commits": 1
+        },
+        {
+          "name": "CouchPugtato/embedded-astra-comparison",
+          "last_commit": "2026-10-11",
+          "commits": 9
+        }
+      ]
+    }
+  ],
+  "repository_details": {
+    "couchpugtato/2024crescendo": {
+      "language": ""
+    },
+    "couchpugtato/2025reefscape": {
+      "language": ""
+    },
+    "couchpugtato/2026rebuilt": {
+      "language": ""
+    },
+    "couchpugtato/calculaterm": {
+      "language": "Go"
+    },
+    "couchpugtato/couchpugtato": {
+      "language": ""
+    },
+    "couchpugtato/decision-matrix-weight-finding-tool": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/embedded-astra-comparison": {
+      "language": "Python"
+    },
+    "couchpugtato/exponential-elytra": {
+      "language": "Java"
+    },
+    "couchpugtato/graph-as-policy-mvp": {
+      "language": "Python"
+    },
+    "couchpugtato/howmanylines": {
+      "language": "Go"
+    },
+    "couchpugtato/interrogatethelaw.com": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/linkage-solver": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/n-body-problem-sim": {
+      "language": "Rust"
+    },
+    "couchpugtato/nvim_dotfiles": {
+      "language": "Lua"
+    },
+    "couchpugtato/onboardingfall2026": {
+      "language": "Python"
+    },
+    "couchpugtato/path-generation-swerve": {
+      "language": "Java"
+    },
+    "couchpugtato/project-porygon": {
+      "language": "C"
+    },
+    "couchpugtato/punchcard": {
+      "language": "Go"
+    },
+    "couchpugtato/rebuild-hopper-packing-optimization-sim": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/rep-count": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/robot-object-avoidant-path-generation-visualizer": {
+      "language": "Rust"
+    },
+    "couchpugtato/rosdockervm": {
+      "language": ""
+    },
+    "couchpugtato/statfolio-5e": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/stormcloud": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/teaching-java-environment": {
+      "language": "Java"
+    },
+    "couchpugtato/termsweeper": {
+      "language": "Rust"
+    },
+    "couchpugtato/turret-global-aim-solver": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/videodatasettool": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/vortex": {
+      "language": "Rust"
+    },
+    "couchpugtato/vortex-stormchaser": {
+      "language": "JavaScript"
+    },
+    "couchpugtato/watchy-custom-faces": {
+      "language": "C"
+    }
+  }
+}
