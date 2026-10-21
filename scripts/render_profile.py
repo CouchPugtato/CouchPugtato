@@ -221,19 +221,50 @@ def github_weekly_activity(username, today=None, include_monthly=False):
     return weeks
 
 
-def backdrop(accent):
+@lru_cache(maxsize=8)
+def _backdrop_base(accent):
     image = Image.new("RGB", SIZE, BG)
     draw = ImageDraw.Draw(image)
-    for x in range(0, SIZE[0], 44):
-        draw.line((x, 0, x, SIZE[1]), fill="#22162f")
-    for y in range(0, SIZE[1], 44):
+    for y in range(-6, SIZE[1] + 6, 6):
+        vertical = (y - SIZE[1] / 2) / (SIZE[1] / 2)
+        points = [(x, round(y - 14 * ((x - SIZE[0] / 2) / (SIZE[0] / 2)) ** 4 * vertical))
+                  for x in range(0, SIZE[0] + 1, 10)]
+        draw.line(points, fill="#1a1125")
+    horizon, vanishing_y = 286, 254
+    center = SIZE[0] / 2
+    background_rgb = ImageColor.getrgb(BG)
+    sun_rgb = ImageColor.getrgb(SECONDARY)
+    for y in range(horizon - 72, horizon):
+        if y % 6 == 0 or (y >= horizon - 38 and (horizon - y) % 10 < 4):
+            continue
+        half_width = math.sqrt(72 ** 2 - (y - horizon) ** 2)
+        strength = 0.18 - 0.06 * (y - horizon + 72) / 72
+        color = tuple(round(bg + (sun - bg) * strength)
+                      for bg, sun in zip(background_rgb, sun_rgb))
+        draw.line((round(center - half_width), y, round(center + half_width), y), fill=color)
+    perspective = (horizon - vanishing_y) / (SIZE[1] - vanishing_y)
+    for x in range(-SIZE[0], SIZE[0] * 2 + 1, 120):
+        start_x = center + (x - center) * perspective
+        draw.line((round(start_x), horizon, x, SIZE[1]), fill="#22162f")
+    for distance in (5, 12, 23, 40, 65, 99, 143):
+        y = horizon + distance
         draw.line((0, y, SIZE[0], y), fill="#22162f")
-    for y in range(0, SIZE[1], 6):
-        draw.line((0, y, SIZE[0], y), fill="#1a1125")
+    draw.line((0, horizon, SIZE[0], horizon), fill="#22162f")
+    # curved glass shading grows stronger toward the screen borders
+    shading = Image.new("RGBA", SIZE)
+    horizontal = [abs((x - SIZE[0] / 2) / (SIZE[0] / 2)) ** 6 for x in range(SIZE[0])]
+    shading.putdata([(0, 0, 0, round(min(1, u + abs((y - SIZE[1] / 2) / (SIZE[1] / 2)) ** 6) * 112))
+                     for y in range(SIZE[1]) for u in horizontal])
+    image = Image.alpha_composite(image.convert("RGBA"), shading).convert("RGB")
+    draw = ImageDraw.Draw(image)
     for x, y, sx, sy in ((22, 22, 1, 1), (1077, 22, -1, 1),
                          (22, SIZE[1] - 23, 1, -1), (1077, SIZE[1] - 23, -1, -1)):
         draw.line([(x, y + sy * 26), (x, y), (x + sx * 40, y)], fill=accent, width=2)
     return image
+
+
+def backdrop(accent):
+    return _backdrop_base(accent).copy()
 
 
 @lru_cache(maxsize=1)
@@ -427,6 +458,14 @@ def profile_name_size(name):
     return size
 
 
+def language_colors(config):
+    languages = sorted(((name, count) for name, count in config.get("languages", {}).items() if count),
+                       key=lambda item: (-item[1], item[0]))
+    palette = (config["accent"], SECONDARY, "#d5b4ff", "#ffbb8a")
+    return {**{name: "#65d6c4" if name == "C" else color
+               for (name, _), color in zip(languages[:4], palette)}, "Other": "#665673"}
+
+
 def language_chart(draw, config):
     languages = sorted(((name, count) for name, count in config.get("languages", {}).items() if count),
                        key=lambda item: (-item[1], item[0]))
@@ -438,13 +477,12 @@ def language_chart(draw, config):
     other = sum(count for _, count in languages[4:])
     if other:
         entries.append(("Other", other))
-    colors = (config["accent"], SECONDARY, "#d5b4ff", "#ffbb8a", "#665673")
+    colors = language_colors(config)
     text(draw, (42, 219), "LANGUAGES / PUBLIC CODE", 11, 720, 1, MUTED)
     cumulative = 0
     legend_x = 42
-    for (name, count), color in zip(entries, colors):
-        if name == "C":
-            color = "#65d6c4"
+    for name, count in entries:
+        color = colors[name]
         left = 42 + round(720 * cumulative / total)
         cumulative += count
         right = 42 + round(720 * cumulative / total)
@@ -474,6 +512,7 @@ def recent_repositories(months):
 
 
 def activity_charts(draw, config):
+    colors = language_colors(config)
     text(draw, (42, 292), "RECENTLY ACTIVE REPOSITORIES", 11, 530, 1, MUTED)
     text(draw, (620, 293), "COMMITS / 6 MONTHS", 9, 142, 1, MUTED)
     for index, repo in enumerate(recent_repositories(config.get("monthly_repositories", []))[:4]):
@@ -486,8 +525,12 @@ def activity_charts(draw, config):
         draw.line((x + 12, y + 27, x + 159, y + 27), fill="#49305e")
         text(draw, (x + 12, y + 9), label, 12, 147, 1, INK)
         language = config.get("repository_details", {}).get(repo["name"].casefold(), {}).get("language") or "Code"
-        language_color = "#65d6c4" if language == "C" else config["accent"]
-        draw.ellipse((x + 12, y + 39, x + 17, y + 44), fill=language_color)
+        language_color = colors.get(language, colors["Other"])
+        bounds = draw.textbbox((x + 24, y + 34), language, font=font(10))
+        center_y = (bounds[1] + bounds[3]) // 2
+        center_x = x + 15
+        draw.polygon([(center_x, center_y - 3), (center_x + 3, center_y),
+                      (center_x, center_y + 3), (center_x - 3, center_y)], fill=language_color)
         text(draw, (x + 24, y + 34), language, 10, 78, 1, MUTED)
         count = repo["commits"]
         count_label = f"{count} {'commit' if count == 1 else 'commits'}"
