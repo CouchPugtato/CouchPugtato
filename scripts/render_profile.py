@@ -353,6 +353,8 @@ def project_arm(vertices, center, scale, progress, rotation=0.0, pitch=0.24):
     yaw = 0.5 + progress * math.tau * 0.65 + rotation
     projected = []
     for x, y, z in vertices:
+        # rotate around the base axis so the seed stays fixed as the arm turns
+        x += 20
         rx = x * math.cos(yaw) + z * math.sin(yaw)
         rz = -x * math.sin(yaw) + z * math.cos(yaw)
         ry = y * math.cos(pitch) - rz * math.sin(pitch)
@@ -363,7 +365,15 @@ def project_arm(vertices, center, scale, progress, rotation=0.0, pitch=0.24):
     return projected
 
 
-def robot_arm(draw, center, scale, progress, accent, build=1.0, show_points=True, rotation=0.0, pitch=0.24):
+def point_opacity(elapsed, born, finished):
+    fade_start = max(born + 1.2, finished)
+    if elapsed < born:
+        return 0.0
+    return max(0.0, min(1.0, 1 - (elapsed - fade_start) / 0.15))
+
+
+def robot_arm(draw, center, scale, progress, accent, build=1.0, show_points=True, rotation=0.0, pitch=0.24,
+              elapsed_seconds=None, drawing_seconds=4.5, point_draw=None):
     """Rotate the wireframe while a connected drawing front grows from the base."""
     vertices, edges, distances, extent, _ = arm_drawing_graph()
     frontier = max(0, min(1, build)) * extent
@@ -375,9 +385,15 @@ def robot_arm(draw, center, scale, progress, accent, build=1.0, show_points=True
         if frontier <= start or length == 0:
             continue
         fraction = min(1, (frontier - start) / length)
-        end = tuple(projected[a][i] + (projected[b][i] - projected[a][i]) * fraction
-                    for i in range(2))
-        depth = (projected[a][2] + projected[b][2]) / 2
+        # advance in model space before projection to keep tips attached during rotation
+        if fraction < 1:
+            tip = tuple(vertices[a][i] + (vertices[b][i] - vertices[a][i]) * fraction
+                        for i in range(3))
+            tip_projected = project_arm([tip], center, scale, progress, rotation, pitch)[0]
+        else:
+            tip_projected = projected[b]
+        end = tip_projected[:2]
+        depth = (projected[a][2] + tip_projected[2]) / 2
         brightness = max(0.38, min(1.0, 0.78 - depth / 260))
         rgb = ImageColor.getrgb(SECONDARY if secondary else accent)
         color = tuple(round(channel * brightness) for channel in rgb)
@@ -385,12 +401,22 @@ def robot_arm(draw, center, scale, progress, accent, build=1.0, show_points=True
         if fraction < 1:
             tips.append(end)
     if show_points and scale >= 0.5:
-        # every reached vertex stays lit, including rear vertices during rotation
-        for index, (x, y, _) in enumerate(projected):
-            if distances[index] <= frontier:
-                draw.rectangle((x - 1, y - 1, x + 1, y + 1), fill=INK)
+        # use real time so branches and unequal edge lengths have consistent lifetimes
+        elapsed = build * drawing_seconds if elapsed_seconds is None else elapsed_seconds
+        births = [distance / extent * drawing_seconds for distance in distances]
+        finishes = list(births)
+        for a, _, _, start, length in edges:
+            finishes[a] = max(finishes[a], (start + length) / extent * drawing_seconds)
+        point_draw = point_draw if point_draw is not None else draw
+        rgb = ImageColor.getrgb(INK)
+        for index, born in enumerate(births):
+            opacity = point_opacity(elapsed, born, finishes[index])
+            if opacity <= 0:
+                continue
+            x, y, _ = projected[index]
+            point_draw.rectangle((x - 1, y - 1, x + 1, y + 1), fill=rgb + (round(opacity * 255),))
         for x, y in tips:
-            draw.point((round(x), round(y)), fill=INK)
+            point_draw.point((round(x), round(y)), fill=rgb + (255,))
 
 
 def profile_name_size(name):
@@ -551,8 +577,14 @@ def loading_scene(config, progress):
     text(draw, (72, 33), "LINUX / PROFILE INITIALIZATION", 12, 780, 1, accent)
     status_x = 1028 - round(draw.textlength("systemd[1]", font=font(11)))
     text(draw, (status_x, 33), "systemd[1]", 11, 110, 1, SECONDARY)
+    points_layer = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     robot_arm(draw, (255, 200), 1.1, progress, accent,
-              build=min(1, progress / 0.9), rotation=progress * math.pi / 4)
+              build=min(1, progress / 0.9), rotation=progress * math.pi / 4,
+              elapsed_seconds=progress * config["duration_seconds"] * 0.5,
+              drawing_seconds=config["duration_seconds"] * 0.45,
+              point_draw=ImageDraw.Draw(points_layer))
+    image = Image.alpha_composite(image.convert("RGBA"), points_layer).convert("RGB")
+    draw = ImageDraw.Draw(image)
     text(draw, (450, 111), "[ init ] launching profile services", 12, 570, 1, SECONDARY)
     initialization_progress(draw, config, round(progress * 100))
     if progress == 0:

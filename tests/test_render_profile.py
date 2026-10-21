@@ -4,15 +4,67 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from PIL import Image, ImageChops, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from render_profile import ROOT, SIZE, loading_scene, read_config, render, robot_arm, refresh_github_stats, github_weekly_activity, recent_repositories, profile_scene, scene
+from render_profile import ROOT, SIZE, loading_scene, read_config, render, robot_arm, refresh_github_stats, github_weekly_activity, recent_repositories, profile_scene, scene, arm_drawing_graph, project_arm, point_opacity
 
 
 class RendererTests(unittest.TestCase):
+    def test_point_minimum_lifetime_and_smooth_fade(self):
+        self.assertEqual(point_opacity(0.9, born=1, finished=1), 0)
+        self.assertEqual(point_opacity(2.1, born=1, finished=1), 1)
+        self.assertEqual(point_opacity(2.2, born=1, finished=1), 1)
+        self.assertAlmostEqual(point_opacity(2.275, born=1, finished=1), 0.5)
+        self.assertAlmostEqual(point_opacity(2.35, born=1, finished=1), 0)
+
+    def test_point_remains_lit_until_outgoing_connections_finish(self):
+        self.assertEqual(point_opacity(1.9, born=0, finished=2), 1)
+        self.assertEqual(point_opacity(2, born=0, finished=2), 1)
+        self.assertAlmostEqual(point_opacity(2.075, born=0, finished=2), 0.5)
+        self.assertAlmostEqual(point_opacity(2.15, born=0, finished=2), 0)
+
+    def test_parent_fades_while_new_rear_vertex_stays_visible(self):
+        graph = ([(0, 0, 0), (0, 10, 0)], [(0, 1, False, 0, 10)], [0, 10], 10, 0)
+        points = [(10, 10, -100), (20, 20, 200)]
+        with patch("render_profile.arm_drawing_graph", return_value=graph), \
+                patch("render_profile.project_arm", return_value=points):
+            dots = Mock()
+            robot_arm(Mock(), (0, 0), 1, 1, "#bb8cff", build=1,
+                      elapsed_seconds=2.075, drawing_seconds=2, point_draw=dots)
+        calls = dots.rectangle.call_args_list
+        self.assertEqual([call.args[0] for call in calls], [(9, 9, 11, 11), (19, 19, 21, 21)])
+        self.assertIn(calls[0].kwargs["fill"][3], (127, 128))
+        self.assertEqual(calls[1].kwargs["fill"][3], 255)
+
+    def test_arm_seed_is_stationary_throughout_rotation(self):
+        import math
+        vertices, _, _, _, root = arm_drawing_graph()
+        anchor = project_arm([vertices[root]], (255, 200), 1.1, 0)[0]
+        for step in range(61):
+            progress = step / 60
+            point = project_arm([vertices[root]], (255, 200), 1.1, progress,
+                                rotation=progress * math.pi / 4)[0]
+            for actual, expected in zip(point, anchor):
+                self.assertAlmostEqual(actual, expected, places=10)
+
+    def test_growing_tip_is_projected_from_its_3d_position(self):
+        import math
+        vertices = [(-20, 0, -70), (20, 80, 70)]
+        length = math.dist(*vertices)
+        graph = (vertices, [(0, 1, False, 0, length)], [0, length], length, 0)
+        midpoint = tuple((a + b) / 2 for a, b in zip(*vertices))
+        for progress in (0, 0.25, 0.5, 0.75, 1):
+            draw = Mock()
+            with patch("render_profile.arm_drawing_graph", return_value=graph):
+                robot_arm(draw, (200, 200), 1, progress, "#bb8cff", build=0.5)
+            endpoint = draw.line.call_args.args[0][1]
+            expected = project_arm([midpoint], (200, 200), 1, progress)[0][:2]
+            for actual, target in zip(endpoint, expected):
+                self.assertAlmostEqual(actual, target, places=10)
+
     def test_ready_indicator_waits_for_complete_profile(self):
         config = read_config(ROOT / "profile/content.json")
         ready = profile_scene(config)
