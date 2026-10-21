@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "979",
+      "value": "981",
       "label": "COMMITS"
     },
     {
@@ -27,7 +27,7 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2420403,
+    "Python": 2420373,
     "C": 1793962,
     "JavaScript": 1699221,
     "Rust": 550100,
@@ -262,7 +262,7 @@
         {
           "name": "CouchPugtato/CouchPugtato",
           "last_commit": "2026-10-21",
-          "commits": 4
+          "commits": 6
         },
         {
           "name": "CouchPugtato/Statfolio-5e",
