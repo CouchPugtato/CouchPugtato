@@ -27,7 +27,7 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2368031,
+    "Python": 2413575,
     "C": 1793962,
     "JavaScript": 1699221,
     "Rust": 550100,
@@ -46,7 +46,7 @@
   },
   "language_repos": {
     "JavaScript": 13,
-    "Python": 5,
+    "Python": 6,
     "Go": 4,
     "Rust": 4,
     "C": 3,
@@ -260,14 +260,14 @@
       "partial": true,
       "items": [
         {
+          "name": "CouchPugtato/CouchPugtato",
+          "last_commit": "2026-10-21",
+          "commits": 2
+        },
+        {
           "name": "CouchPugtato/Statfolio-5e",
           "last_commit": "2026-10-20",
           "commits": 28
-        },
-        {
-          "name": "CouchPugtato/CouchPugtato",
-          "last_commit": "2026-10-20",
-          "commits": 1
         },
         {
           "name": "CouchPugtato/graph-as-policy-mvp",
@@ -311,7 +311,7 @@
       "language": "Go"
     },
     "couchpugtato/couchpugtato": {
-      "language": ""
+      "language": "Python"
     },
     "couchpugtato/decision-matrix-weight-finding-tool": {
       "language": "JavaScript"
