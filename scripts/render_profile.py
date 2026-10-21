@@ -221,35 +221,54 @@ def github_weekly_activity(username, today=None, include_monthly=False):
     return weeks
 
 
+@lru_cache(maxsize=1)
+def sun_bands():
+    horizon, radius, center = 286, 72, SIZE[0] / 2
+    bands = []
+    for y in range(horizon - radius, horizon):
+        if y % 6 == 0 or (y >= horizon - 38 and (horizon - y) % 10 < 4):
+            continue
+        half_width = math.sqrt(radius ** 2 - (y - horizon) ** 2)
+        strength = 0.18 - 0.06 * (y - horizon + radius) / radius
+        bands.append((y, round(center - half_width), round(center + half_width), strength))
+    return tuple(bands)
+
+
 @lru_cache(maxsize=8)
-def _backdrop_base(accent):
+def _backdrop_base(accent, show_sun=True, emphasis=0):
     image = Image.new("RGB", SIZE, BG)
     draw = ImageDraw.Draw(image)
+    background_rgb = ImageColor.getrgb(BG)
+    accent_rgb = tuple(round(channel * scale) for channel, scale
+                       in zip(ImageColor.getrgb(accent), (0.55, 0.36, 0.65)))
+    emphasis = max(0, min(1, emphasis))
+
+    def lit_color(value):
+        strength = 0.24 if value == "#1a1125" else 1
+        return tuple(round(channel + (bg + (purple - bg) * strength - channel) * emphasis)
+                     for bg, purple, channel in zip(background_rgb, accent_rgb, ImageColor.getrgb(value)))
+
     for y in range(-6, SIZE[1] + 6, 6):
         vertical = (y - SIZE[1] / 2) / (SIZE[1] / 2)
         points = [(x, round(y - 14 * ((x - SIZE[0] / 2) / (SIZE[0] / 2)) ** 4 * vertical))
                   for x in range(0, SIZE[0] + 1, 10)]
-        draw.line(points, fill="#1a1125")
+        draw.line(points, fill=lit_color("#1a1125"))
     horizon, vanishing_y = 286, 254
     center = SIZE[0] / 2
-    background_rgb = ImageColor.getrgb(BG)
     sun_rgb = ImageColor.getrgb(SECONDARY)
-    for y in range(horizon - 72, horizon):
-        if y % 6 == 0 or (y >= horizon - 38 and (horizon - y) % 10 < 4):
-            continue
-        half_width = math.sqrt(72 ** 2 - (y - horizon) ** 2)
-        strength = 0.18 - 0.06 * (y - horizon + 72) / 72
+    for y, left, right, strength in sun_bands() if show_sun else ():
+        strength += (1 - strength) * emphasis
         color = tuple(round(bg + (sun - bg) * strength)
                       for bg, sun in zip(background_rgb, sun_rgb))
-        draw.line((round(center - half_width), y, round(center + half_width), y), fill=color)
+        draw.line((left, y, right, y), fill=color)
     perspective = (horizon - vanishing_y) / (SIZE[1] - vanishing_y)
     for x in range(-SIZE[0], SIZE[0] * 2 + 1, 120):
         start_x = center + (x - center) * perspective
-        draw.line((round(start_x), horizon, x, SIZE[1]), fill="#22162f")
+        draw.line((round(start_x), horizon, x, SIZE[1]), fill=lit_color("#22162f"))
     for distance in (5, 12, 23, 40, 65, 99, 143):
         y = horizon + distance
-        draw.line((0, y, SIZE[0], y), fill="#22162f")
-    draw.line((0, horizon, SIZE[0], horizon), fill="#22162f")
+        draw.line((0, y, SIZE[0], y), fill=lit_color("#22162f"))
+    draw.line((0, horizon, SIZE[0], horizon), fill=lit_color("#22162f"))
     # curved glass shading grows stronger toward the screen borders
     shading = Image.new("RGBA", SIZE)
     horizontal = [abs((x - SIZE[0] / 2) / (SIZE[0] / 2)) ** 6 for x in range(SIZE[0])]
@@ -263,8 +282,8 @@ def _backdrop_base(accent):
     return image
 
 
-def backdrop(accent):
-    return _backdrop_base(accent).copy()
+def backdrop(accent, show_sun=True, emphasis=0):
+    return _backdrop_base(accent, show_sun, emphasis).copy()
 
 
 @lru_cache(maxsize=1)
@@ -614,7 +633,7 @@ def initialization_progress(draw, config, percent):
 
 
 def loading_scene(config, progress):
-    image = backdrop(config["accent"])
+    image = backdrop(config["accent"], show_sun=False, emphasis=1)
     draw = ImageDraw.Draw(image)
     accent = config["accent"]
     text(draw, (72, 33), "LINUX / PROFILE INITIALIZATION", 12, 780, 1, accent)
@@ -647,59 +666,66 @@ def loading_scene(config, progress):
     return image
 
 
-@lru_cache(maxsize=16)
-def reconstruction_particles(name):
-    """Map arm-edge samples into the name and the new profile accents."""
-    mask = Image.new("L", SIZE, 0)
-    draw = ImageDraw.Draw(mask)
-    draw.text((40, 64), " ".join(name.split()), font=font(profile_name_size(name)), fill=255)
-    targets = [(x, y) for y in range(60, 130, 3) for x in range(40, 770, 3)
-               if mask.getpixel((x, y)) > 96]
-    targets.extend((x, 390) for x in range(42, 1059, 5))
-    targets.extend((780, y) for y in range(72, 385, 5))
-    targets.extend((x, 124) for x in range(42, 116, 4))
+@lru_cache(maxsize=1)
+def reconstruction_particles():
+    """Map arm-edge samples into the existing striped horizon sun."""
+    targets = [(x, y) for y, left, right, _ in sun_bands()
+               for x in range(left, right + 1)]
     vertices, edges = arm_mesh()
     points = project_arm(vertices, (255, 200), 1.1, 1.0, rotation=math.pi / 4)
     rng = random.Random(509)
     particles = []
-    for index, target in enumerate(targets):
+    for target in targets:
         a, b, secondary = edges[rng.randrange(len(edges))]
         t = rng.random()
         source = tuple(points[a][axis] * (1 - t) + points[b][axis] * t for axis in range(2))
         bend = (rng.uniform(-90, 90), rng.uniform(-85, 85))
-        delay = rng.uniform(0, 0.12)
+        delay = rng.uniform(0, 0.08)
         particles.append((source, target, bend, delay, secondary))
     return particles
 
 
 def reconstruction_scene(config, progress, final):
-    backdrop_image = backdrop(config["accent"])
+    # timeline seconds use the default ten second duration as the reference
+    elapsed = progress * 3.06
+    motion = max(0, elapsed - 0.4) / 2
+    backdrop_image = backdrop(config["accent"], show_sun=False, emphasis=1)
     loader = loading_scene(config, 1.0)
-    image = Image.blend(loader, backdrop_image, min(1, progress / 0.23))
+    image = Image.blend(loader, backdrop_image, min(1, elapsed / 0.46))
     glow = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(glow)
-    opacity = round(255 * min(1, progress / 0.08))
-    for source, target, bend, delay, secondary in reconstruction_particles(
-            config["name"]):
-        local = max(0, min(1, (progress - 0.09 - delay) / 0.57))
+    opacity = round(255 * min(1, elapsed / 0.16))
+    cores = []
+    for source, target, bend, delay, secondary in reconstruction_particles():
+        local = max(0, min(1, (motion - 0.09 - delay) / 0.6))
         ease = local * local * (3 - 2 * local)
         arc = math.sin(math.pi * ease)
         x = source[0] + (target[0] - source[0]) * ease + bend[0] * arc
         y = source[1] + (target[1] - source[1]) * ease + bend[1] * arc
-        rgb = ImageColor.getrgb(SECONDARY if secondary else config["accent"])
-        # small halos and bright cores retain the point-cloud silhouette
-        draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=rgb + (round(opacity * 0.18),))
-        draw.rectangle((x, y, x + 1, y + 1), fill=rgb + (opacity,))
+        source_rgb = ImageColor.getrgb(SECONDARY if secondary else config["accent"])
+        sun_rgb = ImageColor.getrgb(SECONDARY)
+        rgb = tuple(round(source + (sun - source) * ease) for source, sun in zip(source_rgb, sun_rgb))
+        # halos fade as the dense cores settle into the exact sun pixels
+        halo_opacity = round(opacity * 0.18 * (1 - ease))
+        if halo_opacity:
+            draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=rgb + (halo_opacity,))
+        cores.append((round(x), round(y), rgb))
+    for x, y, rgb in cores:
+        draw.rectangle((x - 1, y - 1, x + 1, y + 1), fill=rgb + (opacity,))
     image = Image.alpha_composite(image.convert("RGBA"), glow).convert("RGB")
+    # dissolve the points into the drawn sun before the profile appears
+    settle = max(0, min(1, (elapsed - 1.96) / 0.4))
+    settle = settle * settle * (3 - 2 * settle)
+    image = Image.blend(image, backdrop(config["accent"], emphasis=1), settle)
     # the profile service remains in progress until reconstruction is complete
     footer_box = (65, 395, 1030, 420)
     image.paste(backdrop_image.crop(footer_box), footer_box[:2])
     # loading is complete before its text and full bar dissolve with the arm
     status = "[ .... ] profile.service: reconstructing interface"
     text(ImageDraw.Draw(image), (72, 400), status, 11, 956, 1, config["accent"])
-    # hold the reconstructed name and outlines briefly, then bring in the other copy
-    if progress > 0.8:
-        fade = min(1, (progress - 0.8) / 0.2)
+    # hold the drawn sun alone for a beat before revealing the profile
+    if elapsed > 2.76:
+        fade = min(1, (elapsed - 2.76) / 0.3)
         fade = fade * fade * (3 - 2 * fade)
         image = Image.blend(image, profile_scene(config, ready=False), fade)
     return image
@@ -711,17 +737,30 @@ def scene(config, phase, final=None):
     if phase <= 0.6:
         return loading_scene(config, (phase - 0.1) / 0.5)
     final = final if final is not None else profile_scene(config)
-    if phase >= 0.8:
+    if phase >= 0.906:
         return final.copy()
-    return reconstruction_scene(config, (phase - 0.6) / 0.2, final)
+    return reconstruction_scene(config, (phase - 0.6) / 0.306, final)
 
 
 def render(config_path: Path, output: Path) -> tuple[Path, Path]:
     config = read_config(config_path)
     count = max(2, round(config["duration_seconds"] * config["fps"]))
     final = profile_scene(config)
-    # a shared palette prevents colors flickering between frames
-    palette = final.quantize(colors=128)
+    # include transition colors so the shared palette preserves the deeper violet
+    palette_source = Image.new("RGB", (SIZE[0], SIZE[1] * 2))
+    palette_source.paste(final, (0, 0))
+    palette_source.paste(backdrop(config["accent"], emphasis=1), (0, SIZE[1]))
+    palette = palette_source.quantize(colors=128)
+    # reserve depth shades so purple arm lines cannot map to the language chart blue
+    entries = palette.getpalette()
+    shades = []
+    for base in (config["accent"], SECONDARY):
+        rgb = ImageColor.getrgb(base)
+        for index in range(32):
+            strength = 0.38 + 0.62 * index / 31
+            shades.extend(round(channel * strength) for channel in rgb)
+    entries[128 * 3:192 * 3] = shades
+    palette.putpalette(entries)
     frames = []
     for index in range(count):
         progress = index / (count - 1)

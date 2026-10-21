@@ -71,9 +71,10 @@ class RendererTests(unittest.TestCase):
         waiting = profile_scene(config, ready=False)
         indicator = ImageChops.difference(ready, waiting).getbbox()
         self.assertIsNotNone(indicator)
-        self.assertIsNone(ImageChops.difference(scene(config, 0.79).crop(indicator),
-                                               waiting.crop(indicator)).getbbox())
-        self.assertIsNone(ImageChops.difference(scene(config, 0.8).crop(indicator),
+        with patch("render_profile.profile_scene", wraps=profile_scene) as draw_profile:
+            scene(config, 0.896, final=ready)
+            draw_profile.assert_called_once_with(config, ready=False)
+        self.assertIsNone(ImageChops.difference(scene(config, 0.906).crop(indicator),
                                                ready.crop(indicator)).getbbox())
 
     def test_final_arm_has_no_vertex_highlights(self):
@@ -94,7 +95,7 @@ class RendererTests(unittest.TestCase):
                 self.assertGreaterEqual(animation.info["duration"],
                                         round(config["duration_seconds"] * 100),
                                         "Opening frame must pause before drawing starts")
-                palette = preview.convert("RGB").quantize(colors=128)
+                palette = animation.copy()
                 expected_opening = loading_scene(config, 0).quantize(
                     palette=palette, dither=Image.Dither.NONE).convert("RGB")
                 self.assertIsNone(ImageChops.difference(
@@ -107,9 +108,9 @@ class RendererTests(unittest.TestCase):
                     self.assertEqual(animation.disposal_method, 1)
                 self.assertEqual(duration, round(config["duration_seconds"] * 100) * 10)
                 self.assertGreaterEqual(animation.info["duration"],
-                                        round(config["duration_seconds"] * 200))
+                                        round(config["duration_seconds"] * 60))
                 rgb = preview.convert("RGB")
-                expected = rgb.quantize(palette=rgb.quantize(colors=128),
+                expected = rgb.quantize(palette=palette,
                                         dither=Image.Dither.NONE).convert("RGB")
                 difference = ImageChops.difference(animation.convert("RGB"), expected)
                 self.assertIsNone(difference.getbbox(), "GIF must end on the complete preview")
