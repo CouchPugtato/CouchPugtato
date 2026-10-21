@@ -626,10 +626,10 @@ def profile_scene(config, ready=True):
 def initialization_progress(draw, config, percent):
     text(draw, (447, 142), "INITIALIZING", 38, 590, 1, INK)
     text(draw, (450, 201), f"{percent:03d}% / profile.service", 16, 590, 1, config["accent"])
-    draw.line((450, 246, 1000, 246), fill="#49305e", width=2)
-    head = 450 + round(percent / 100 * 550)
-    draw.line((450, 246, head, 246), fill=config["accent"], width=2)
-    draw.rectangle((head - 3, 242, head + 3, 250), fill=INK)
+    slots = 54
+    filled = min(slots, max(0, int(percent * slots / 100)))
+    bar = "=" * slots if percent >= 100 else "=" * filled + ">" + " " * (slots - filled - 1)
+    draw.text((450, 235), f"[{bar}]", font=font(16), fill=config["accent"])
 
 
 def loading_scene(config, progress):
@@ -687,8 +687,8 @@ def reconstruction_particles():
 
 def reconstruction_scene(config, progress, final):
     # timeline seconds use the default ten second duration as the reference
-    elapsed = progress * 3.06
-    motion = max(0, elapsed - 0.4) / 2
+    elapsed = progress * 3.0
+    motion = max(0, elapsed - 0.34) / 2
     backdrop_image = backdrop(config["accent"], show_sun=False, emphasis=1)
     loader = loading_scene(config, 1.0)
     image = Image.blend(loader, backdrop_image, min(1, elapsed / 0.46))
@@ -714,7 +714,7 @@ def reconstruction_scene(config, progress, final):
         draw.rectangle((x - 1, y - 1, x + 1, y + 1), fill=rgb + (opacity,))
     image = Image.alpha_composite(image.convert("RGBA"), glow).convert("RGB")
     # dissolve the points into the drawn sun before the profile appears
-    settle = max(0, min(1, (elapsed - 1.96) / 0.4))
+    settle = max(0, min(1, (elapsed - 1.9) / 0.4))
     settle = settle * settle * (3 - 2 * settle)
     image = Image.blend(image, backdrop(config["accent"], emphasis=1), settle)
     # the profile service remains in progress until reconstruction is complete
@@ -724,8 +724,8 @@ def reconstruction_scene(config, progress, final):
     status = "[ .... ] profile.service: reconstructing interface"
     text(ImageDraw.Draw(image), (72, 400), status, 11, 956, 1, config["accent"])
     # hold the drawn sun alone for a beat before revealing the profile
-    if elapsed > 2.76:
-        fade = min(1, (elapsed - 2.76) / 0.3)
+    if elapsed > 2.7:
+        fade = min(1, (elapsed - 2.7) / 0.3)
         fade = fade * fade * (3 - 2 * fade)
         image = Image.blend(image, profile_scene(config, ready=False), fade)
     return image
@@ -736,10 +736,12 @@ def scene(config, phase, final=None):
         return loading_scene(config, 0)
     if phase <= 0.6:
         return loading_scene(config, (phase - 0.1) / 0.5)
+    if phase <= 0.615:
+        return loading_scene(config, 1.0)
     final = final if final is not None else profile_scene(config)
-    if phase >= 0.906:
+    if phase >= 0.915:
         return final.copy()
-    return reconstruction_scene(config, (phase - 0.6) / 0.306, final)
+    return reconstruction_scene(config, (phase - 0.615) / 0.3, final)
 
 
 def render(config_path: Path, output: Path) -> tuple[Path, Path]:

@@ -72,9 +72,9 @@ class RendererTests(unittest.TestCase):
         indicator = ImageChops.difference(ready, waiting).getbbox()
         self.assertIsNotNone(indicator)
         with patch("render_profile.profile_scene", wraps=profile_scene) as draw_profile:
-            scene(config, 0.896, final=ready)
+            scene(config, 0.905, final=ready)
             draw_profile.assert_called_once_with(config, ready=False)
-        self.assertIsNone(ImageChops.difference(scene(config, 0.906).crop(indicator),
+        self.assertIsNone(ImageChops.difference(scene(config, 0.915).crop(indicator),
                                                ready.crop(indicator)).getbbox())
 
     def test_final_arm_has_no_vertex_highlights(self):
