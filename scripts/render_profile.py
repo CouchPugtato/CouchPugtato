@@ -15,7 +15,7 @@ import re
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-from PIL import Image, ImageColor, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 SIZE = (1100, 440)
@@ -226,12 +226,21 @@ def sun_bands():
     horizon, radius, center = 286, 72, SIZE[0] / 2
     bands = []
     for y in range(horizon - radius, horizon):
-        if y % 6 == 0 or (y >= horizon - 38 and (horizon - y) % 10 < 4):
+        if (y - horizon + radius) % 12 >= 8:
             continue
         half_width = math.sqrt(radius ** 2 - (y - horizon) ** 2)
         strength = 0.18 - 0.06 * (y - horizon + radius) / radius
         bands.append((y, round(center - half_width), round(center + half_width), strength))
     return tuple(bands)
+
+
+@lru_cache(maxsize=1)
+def sun_mask():
+    mask = Image.new("L", SIZE, 0)
+    draw = ImageDraw.Draw(mask)
+    for y, left, right, _ in sun_bands():
+        draw.line((left, y, right, y), fill=255)
+    return mask
 
 
 @lru_cache(maxsize=8)
@@ -422,6 +431,26 @@ def point_opacity(elapsed, born, finished):
     return max(0.0, min(1.0, 1 - (elapsed - fade_start) / 0.15))
 
 
+def arm_line_color(accent, secondary=False):
+    return ImageColor.getrgb(SECONDARY if secondary else accent)
+
+
+def point_coverage(layer):
+    # fade white points by pixel coverage so underlying lines keep their hue
+    bounds = layer.getchannel("A").getbbox()
+    if bounds is None:
+        return layer
+    thresholds = ((0, 7, 3), (6, 5, 2), (4, 1, 8))
+    pixels = layer.load()
+    for y in range(bounds[1], bounds[3]):
+        for x in range(bounds[0], bounds[2]):
+            red, green, blue, alpha = pixels[x, y]
+            if 0 < alpha < 255:
+                visible = alpha >= (thresholds[y % 3][x % 3] + 0.5) * 255 / 9
+                pixels[x, y] = (red, green, blue, 255 if visible else 0)
+    return layer
+
+
 def robot_arm(draw, center, scale, progress, accent, build=1.0, show_points=True, rotation=0.0, pitch=0.24,
               elapsed_seconds=None, drawing_seconds=4.5, point_draw=None):
     """Rotate the wireframe while a connected drawing front grows from the base."""
@@ -443,11 +472,8 @@ def robot_arm(draw, center, scale, progress, accent, build=1.0, show_points=True
         else:
             tip_projected = projected[b]
         end = tip_projected[:2]
-        depth = (projected[a][2] + tip_projected[2]) / 2
-        brightness = max(0.38, min(1.0, 0.78 - depth / 260))
-        rgb = ImageColor.getrgb(SECONDARY if secondary else accent)
-        color = tuple(round(channel * brightness) for channel in rgb)
-        draw.line((projected[a][:2], end), fill=color, width=max(1, round(scale)))
+        color = arm_line_color(accent, secondary)
+        draw.line((projected[a][:2], end), fill=color, width=max(1, round(scale * 1.5)))
         if fraction < 1:
             tips.append(end)
     if show_points and scale >= 0.5:
@@ -645,7 +671,7 @@ def loading_scene(config, progress):
               elapsed_seconds=progress * config["duration_seconds"] * 0.5,
               drawing_seconds=config["duration_seconds"] * 0.45,
               point_draw=ImageDraw.Draw(points_layer))
-    image = Image.alpha_composite(image.convert("RGBA"), points_layer).convert("RGB")
+    image = Image.alpha_composite(image.convert("RGBA"), point_coverage(points_layer)).convert("RGB")
     draw = ImageDraw.Draw(image)
     text(draw, (450, 111), "[ init ] launching profile services", 12, 570, 1, SECONDARY)
     initialization_progress(draw, config, round(progress * 100))
@@ -694,6 +720,8 @@ def reconstruction_scene(config, progress, final):
     image = Image.blend(loader, backdrop_image, min(1, elapsed / 0.46))
     glow = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(glow)
+    settled_points = Image.new("RGBA", SIZE, (0, 0, 0, 0))
+    settled_draw = ImageDraw.Draw(settled_points)
     opacity = round(255 * min(1, elapsed / 0.16))
     cores = []
     for source, target, bend, delay, secondary in reconstruction_particles():
@@ -702,16 +730,20 @@ def reconstruction_scene(config, progress, final):
         arc = math.sin(math.pi * ease)
         x = source[0] + (target[0] - source[0]) * ease + bend[0] * arc
         y = source[1] + (target[1] - source[1]) * ease + bend[1] * arc
-        source_rgb = ImageColor.getrgb(SECONDARY if secondary else config["accent"])
+        source_rgb = arm_line_color(config["accent"], secondary)
         sun_rgb = ImageColor.getrgb(SECONDARY)
         rgb = tuple(round(source + (sun - source) * ease) for source, sun in zip(source_rgb, sun_rgb))
         # halos fade as the dense cores settle into the exact sun pixels
         halo_opacity = round(opacity * 0.18 * (1 - ease))
         if halo_opacity:
             draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=rgb + (halo_opacity,))
-        cores.append((round(x), round(y), rgb))
-    for x, y, rgb in cores:
-        draw.rectangle((x - 1, y - 1, x + 1, y + 1), fill=rgb + (opacity,))
+        cores.append((round(x), round(y), rgb, local >= 1))
+    for x, y, rgb, arrived in cores:
+        target_draw = settled_draw if arrived else draw
+        target_draw.rectangle((x - 1, y - 1, x + 1, y + 1), fill=rgb + (opacity,))
+    # settled points share the drawn sun mask so their larger cores cannot bridge gaps
+    settled_points.putalpha(ImageChops.multiply(settled_points.getchannel("A"), sun_mask()))
+    glow = Image.alpha_composite(glow, settled_points)
     image = Image.alpha_composite(image.convert("RGBA"), glow).convert("RGB")
     # dissolve the points into the drawn sun before the profile appears
     settle = max(0, min(1, (elapsed - 1.9) / 0.4))
@@ -753,15 +785,12 @@ def render(config_path: Path, output: Path) -> tuple[Path, Path]:
     palette_source.paste(final, (0, 0))
     palette_source.paste(backdrop(config["accent"], emphasis=1), (0, SIZE[1]))
     palette = palette_source.quantize(colors=128)
-    # reserve depth shades so purple arm lines cannot map to the language chart blue
+    # reserve the exact purple and orange arm colors
     entries = palette.getpalette()
-    shades = []
-    for base in (config["accent"], SECONDARY):
-        rgb = ImageColor.getrgb(base)
-        for index in range(32):
-            strength = 0.38 + 0.62 * index / 31
-            shades.extend(round(channel * strength) for channel in rgb)
-    entries[128 * 3:192 * 3] = shades
+    arm_colors = []
+    for secondary in (False, True):
+        arm_colors.extend(arm_line_color(config["accent"], secondary))
+    entries[128 * 3:130 * 3] = arm_colors
     palette.putpalette(entries)
     frames = []
     for index in range(count):

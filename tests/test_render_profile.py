@@ -13,6 +13,27 @@ from render_profile import ROOT, SIZE, loading_scene, read_config, render, robot
 
 
 class RendererTests(unittest.TestCase):
+    def test_arm_links_keep_their_exact_colors_at_every_depth(self):
+        for secondary, base in ((False, (187, 140, 255)), (True, (255, 154, 82))):
+            graph = ([(0, 0, 0), (0, 10, 0)], [(0, 1, secondary, 0, 10)], [0, 10], 10, 0)
+            for depth in (-100, 0, 80, 200):
+                draw = Mock()
+                with patch("render_profile.arm_drawing_graph", return_value=graph), \
+                        patch("render_profile.project_arm", return_value=[(10, 10, depth), (20, 20, depth)]):
+                    robot_arm(draw, (0, 0), 1, 1, "#bb8cff", show_points=False)
+                color = draw.line.call_args.kwargs["fill"]
+                self.assertEqual(color, base)
+
+    def test_fading_white_points_do_not_desaturate_underlying_lines(self):
+        from render_profile import point_coverage
+        purple = (187, 140, 255, 255)
+        white = (245, 237, 255, 255)
+        points = Image.new("RGBA", (3, 3), (*white[:3], 128))
+        faded = point_coverage(points)
+        result = Image.alpha_composite(Image.new("RGBA", (3, 3), purple), faded)
+        colors = {color: count for count, color in result.getcolors()}
+        self.assertEqual(colors, {white: 5, purple: 4})
+
     def test_point_minimum_lifetime_and_smooth_fade(self):
         self.assertEqual(point_opacity(0.9, born=1, finished=1), 0)
         self.assertEqual(point_opacity(2.1, born=1, finished=1), 1)
