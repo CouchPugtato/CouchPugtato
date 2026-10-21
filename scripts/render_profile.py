@@ -461,8 +461,8 @@ def profile_name_size(name):
 def language_colors(config):
     languages = sorted(((name, count) for name, count in config.get("languages", {}).items() if count),
                        key=lambda item: (-item[1], item[0]))
-    palette = (config["accent"], SECONDARY, "#d5b4ff", "#ffbb8a")
-    return {**{name: "#65d6c4" if name == "C" else color
+    palette = (config["accent"], SECONDARY, "#769fe0", "#ffbb8a")
+    return {**{name: color
                for (name, _), color in zip(languages[:4], palette)}, "Other": "#665673"}
 
 
