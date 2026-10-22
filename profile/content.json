@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "996",
+      "value": "997",
       "label": "COMMITS"
     },
     {
@@ -27,7 +27,7 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2424786,
+    "Python": 2439486,
     "C": 1793962,
     "JavaScript": 1765972,
     "Rust": 550100,
@@ -260,6 +260,11 @@
       "partial": true,
       "items": [
         {
+          "name": "CouchPugtato/graph-as-policy-mvp",
+          "last_commit": "2026-10-22",
+          "commits": 20
+        },
+        {
           "name": "CouchPugtato/Statfolio-5e",
           "last_commit": "2026-10-22",
           "commits": 33
@@ -268,11 +273,6 @@
           "name": "CouchPugtato/CouchPugtato",
           "last_commit": "2026-10-22",
           "commits": 16
-        },
-        {
-          "name": "CouchPugtato/graph-as-policy-mvp",
-          "last_commit": "2026-10-19",
-          "commits": 19
         },
         {
           "name": "CouchPugtato/Vortex",
