@@ -706,14 +706,18 @@ def reconstruction_particles():
         t = rng.random()
         source = tuple(points[a][axis] * (1 - t) + points[b][axis] * t for axis in range(2))
         bend = (rng.uniform(-90, 90), rng.uniform(-85, 85))
-        delay = rng.uniform(0, 0.08)
-        particles.append((source, target, bend, delay, secondary))
-    return particles
+        particles.append((source, target, bend, 0, secondary))
+    left = min(target[0] for _, target, _, _, _ in particles)
+    right = max(target[0] for _, target, _, _, _ in particles)
+    span = max(1, right - left)
+    # fill the far side of the sun first and sweep back toward the arm
+    return [(source, target, bend, 0.45 * (right - target[0]) / span, secondary)
+            for source, target, bend, _, secondary in particles]
 
 
 def reconstruction_scene(config, progress, final):
     # timeline seconds use the default ten second duration as the reference
-    elapsed = progress * 3.0
+    elapsed = progress * 3.74
     motion = max(0, elapsed - 0.34) / 2
     backdrop_image = backdrop(config["accent"], show_sun=False, emphasis=1)
     loader = loading_scene(config, 1.0)
@@ -727,9 +731,8 @@ def reconstruction_scene(config, progress, final):
     for source, target, bend, delay, secondary in reconstruction_particles():
         local = max(0, min(1, (motion - 0.09 - delay) / 0.6))
         ease = local * local * (3 - 2 * local)
-        arc = math.sin(math.pi * ease)
-        x = source[0] + (target[0] - source[0]) * ease + bend[0] * arc
-        y = source[1] + (target[1] - source[1]) * ease + bend[1] * arc
+        x = source[0] + (target[0] - source[0]) * ease
+        y = source[1] + (target[1] - source[1]) * ease
         source_rgb = arm_line_color(config["accent"], secondary)
         sun_rgb = ImageColor.getrgb(SECONDARY)
         rgb = tuple(round(source + (sun - source) * ease) for source, sun in zip(source_rgb, sun_rgb))
@@ -746,7 +749,7 @@ def reconstruction_scene(config, progress, final):
     glow = Image.alpha_composite(glow, settled_points)
     image = Image.alpha_composite(image.convert("RGBA"), glow).convert("RGB")
     # dissolve the points into the drawn sun before the profile appears
-    settle = max(0, min(1, (elapsed - 1.9) / 0.4))
+    settle = max(0, min(1, (elapsed - 2.64) / 0.4))
     settle = settle * settle * (3 - 2 * settle)
     image = Image.blend(image, backdrop(config["accent"], emphasis=1), settle)
     # the profile service remains in progress until reconstruction is complete
@@ -756,8 +759,8 @@ def reconstruction_scene(config, progress, final):
     status = "[ .... ] profile.service: reconstructing interface"
     text(ImageDraw.Draw(image), (72, 400), status, 11, 956, 1, config["accent"])
     # hold the drawn sun alone for a beat before revealing the profile
-    if elapsed > 2.7:
-        fade = min(1, (elapsed - 2.7) / 0.3)
+    if elapsed > 3.44:
+        fade = min(1, (elapsed - 3.44) / 0.3)
         fade = fade * fade * (3 - 2 * fade)
         image = Image.blend(image, profile_scene(config, ready=False), fade)
     return image
@@ -771,9 +774,9 @@ def scene(config, phase, final=None):
     if phase <= 0.615:
         return loading_scene(config, 1.0)
     final = final if final is not None else profile_scene(config)
-    if phase >= 0.915:
+    if phase >= 0.989:
         return final.copy()
-    return reconstruction_scene(config, (phase - 0.615) / 0.3, final)
+    return reconstruction_scene(config, (phase - 0.615) / 0.374, final)
 
 
 def render(config_path: Path, output: Path) -> tuple[Path, Path]:

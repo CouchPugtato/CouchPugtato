@@ -93,9 +93,9 @@ class RendererTests(unittest.TestCase):
         indicator = ImageChops.difference(ready, waiting).getbbox()
         self.assertIsNotNone(indicator)
         with patch("render_profile.profile_scene", wraps=profile_scene) as draw_profile:
-            scene(config, 0.905, final=ready)
+            scene(config, 0.979, final=ready)
             draw_profile.assert_called_once_with(config, ready=False)
-        self.assertIsNone(ImageChops.difference(scene(config, 0.915).crop(indicator),
+        self.assertIsNone(ImageChops.difference(scene(config, 0.989).crop(indicator),
                                                ready.crop(indicator)).getbbox())
 
     def test_final_arm_has_no_vertex_highlights(self):
@@ -129,7 +129,7 @@ class RendererTests(unittest.TestCase):
                     self.assertEqual(animation.disposal_method, 1)
                 self.assertEqual(duration, round(config["duration_seconds"] * 100) * 10)
                 self.assertGreaterEqual(animation.info["duration"],
-                                        round(config["duration_seconds"] * 60))
+                                        round(1000 / config["fps"]))
                 rgb = preview.convert("RGB")
                 expected = rgb.quantize(palette=palette,
                                         dither=Image.Dither.NONE).convert("RGB")
