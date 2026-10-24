@@ -364,9 +364,36 @@ class GitHubStatsTests(unittest.TestCase):
         self.assertEqual(months[0]["items"][0]["commits"], 4)
 
     def test_incomplete_activity_is_not_accepted(self):
-        with patch("render_profile.github_api", return_value={"incomplete_results": True}):
+        with patch("render_profile.github_api", return_value={"incomplete_results": True}), \
+                patch("render_profile.time.sleep"):
             with self.assertRaisesRegex(ValueError, "incomplete weekly activity"):
                 github_weekly_activity("example", today=date(2026, 10, 20))
+
+    def test_commit_count_retries_incomplete_results(self):
+        from render_profile import github_commit_count
+        with patch("render_profile.github_api", side_effect=[
+                {"incomplete_results": True, "total_count": 5},
+                {"incomplete_results": False, "total_count": 1234}]) as api, \
+                patch("render_profile.time.sleep") as sleep:
+            self.assertEqual(github_commit_count("example"), 1234)
+        self.assertEqual(api.call_count, 2)
+        self.assertEqual(api.call_args_list[0], api.call_args_list[1])
+        sleep.assert_called_once_with(3)
+
+    def test_exhausted_commit_count_retries_preserve_saved_stats(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "content.json"
+            original = json.dumps({"github_username": "example", "stats": [{"value": "100", "label": "COMMITS"}]})
+            path.write_text(original, encoding="utf-8")
+            with patch("render_profile.github_api", side_effect=[
+                    {"followers": 7, "public_repos": 0}, [],
+                    {"incomplete_results": True}, {"incomplete_results": True},
+                    {"incomplete_results": True}]) as api, patch("render_profile.time.sleep") as sleep:
+                with self.assertRaisesRegex(ValueError, "incomplete commit count"):
+                    refresh_github_stats(path)
+            self.assertEqual(api.call_count, 5)
+            self.assertEqual([call.args[0] for call in sleep.call_args_list], [3, 6])
+            self.assertEqual(path.read_text(encoding="utf-8"), original)
 
     def test_api_failure_preserves_saved_stats(self):
         with tempfile.TemporaryDirectory() as directory:

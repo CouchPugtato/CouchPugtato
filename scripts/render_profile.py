@@ -12,6 +12,8 @@ import math
 import os
 import random
 import re
+import sys
+import time
 from pathlib import Path
 from urllib.request import Request, urlopen
 
@@ -158,10 +160,22 @@ def aggregate_languages(repository_languages):
     return languages, language_repos
 
 
+def complete_github_search(path, error):
+    for attempt in range(3):
+        result = github_api(path)
+        if not result.get("incomplete_results"):
+            return result
+        if attempt < 2:
+            delay = 3 * 2 ** attempt
+            print(f"GitHub search incomplete; retrying in {delay} seconds ({attempt + 2}/3)", file=sys.stderr)
+            time.sleep(delay)
+    raise ValueError(error)
+
+
 def github_commit_count(username):
-    result = github_api(f"/search/commits?q=author%3A{username}+is%3Apublic&per_page=1")
-    if result.get("incomplete_results"):
-        raise ValueError("GitHub returned an incomplete commit count; saved stats were not changed")
+    result = complete_github_search(
+        f"/search/commits?q=author%3A{username}+is%3Apublic&per_page=1",
+        "GitHub returned an incomplete commit count; saved stats were not changed")
     return result["total_count"]
 
 
@@ -184,9 +198,8 @@ def github_weekly_activity(username, today=None, include_monthly=False):
         query = (f"/search/commits?q=author%3A{username}+is%3Apublic"
                  f"+author-date%3A{start.isoformat()}..{end.isoformat()}"
                  "&sort=author-date&order=asc&per_page=100")
-        result = github_api(query + "&page=1")
-        if result.get("incomplete_results"):
-            raise ValueError("GitHub returned incomplete weekly activity; saved stats were not changed")
+        error = "GitHub returned incomplete weekly activity; saved stats were not changed"
+        result = complete_github_search(query + "&page=1", error)
         # commit search exposes at most 1,000 results per query split busy periods
         if result["total_count"] > 1000:
             if start == end:
@@ -198,9 +211,7 @@ def github_weekly_activity(username, today=None, include_monthly=False):
         pages = (result["total_count"] + 99) // 100
         for page in range(1, max(1, pages) + 1):
             if page > 1:
-                result = github_api(query + f"&page={page}")
-                if result.get("incomplete_results"):
-                    raise ValueError("GitHub returned incomplete weekly activity; saved stats were not changed")
+                result = complete_github_search(query + f"&page={page}", error)
             for item in result["items"]:
                 stamp = item["commit"]["author"]["date"]
                 day = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone(timezone.utc).date()
