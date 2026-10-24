@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,013",
+      "value": "1,017",
       "label": "COMMITS"
     },
     {
@@ -29,17 +29,17 @@
   "languages": {
     "Python": 2533796,
     "JavaScript": 1837754,
-    "C": 1793962,
+    "C": 1809782,
     "Rust": 550100,
     "Go": 318022,
     "Java": 147226,
     "Svelte": 27052,
     "Shell": 24218,
     "Lua": 24018,
+    "PowerShell": 22855,
     "NSIS": 12496,
+    "CMake": 10077,
     "C++": 9884,
-    "CMake": 9870,
-    "PowerShell": 8173,
     "TypeScript": 5158,
     "Dockerfile": 334,
     "Batchfile": 120
@@ -48,11 +48,11 @@
     "JavaScript": 13,
     "Python": 6,
     "Go": 4,
+    "PowerShell": 4,
     "Rust": 4,
     "C": 3,
     "CMake": 3,
     "Java": 3,
-    "PowerShell": 3,
     "Shell": 3,
     "Batchfile": 1,
     "C++": 1,
@@ -256,13 +256,18 @@
     },
     {
       "month": "2026-10",
-      "repositories": 7,
+      "repositories": 8,
       "partial": true,
       "items": [
         {
           "name": "CouchPugtato/Statfolio-5e",
           "last_commit": "2026-10-24",
           "commits": 38
+        },
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-10-24",
+          "commits": 3
         },
         {
           "name": "CouchPugtato/Graph-as-Policy-Robotics-Benchmark",
@@ -272,7 +277,7 @@
         {
           "name": "CouchPugtato/CouchPugtato",
           "last_commit": "2026-10-24",
-          "commits": 25
+          "commits": 26
         },
         {
           "name": "CouchPugtato/Vortex",
