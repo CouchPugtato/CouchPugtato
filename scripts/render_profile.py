@@ -19,7 +19,7 @@ from PIL import Image, ImageChops, ImageColor, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 SIZE = (1100, 440)
-BG, PANEL, INK, MUTED = "#110c1d", "#1d142e", "#f5edff", "#bdabcd"
+BG, PANEL, INK, MUTED = "#08060d", "#1d142e", "#f5edff", "#bdabcd"
 SECONDARY = "#ff9a52"
 
 
