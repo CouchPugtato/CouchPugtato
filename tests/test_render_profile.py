@@ -13,6 +13,47 @@ from render_profile import ROOT, SIZE, loading_scene, read_config, render, robot
 
 
 class RendererTests(unittest.TestCase):
+    def test_long_link_braces_do_not_inherit_orange_joint_material(self):
+        import math
+        from render_profile import arm_mesh
+        vertices, edges = arm_mesh()
+        long_edges = [(a, b, material) for a, b, material in edges
+                      if math.dist(vertices[a], vertices[b]) > 50]
+        self.assertTrue(long_edges)
+        self.assertTrue(all(material == "terrain" for _, _, material in long_edges))
+
+    def test_blue_links_share_vertices_with_outer_orange_joint_rims(self):
+        from render_profile import arm_mesh
+        vertices, edges = arm_mesh()
+        points = {"terrain": set(), True: set()}
+        for a, b, material in edges:
+            for index in (a, b):
+                points[material].add(tuple(round(value, 6) for value in vertices[index]))
+        shared = points["terrain"] & points[True]
+        for cx, cy, radius, half_length in ((-20, -48, 18, 18), (-56, 38, 17, 16), (38, 82, 12, 12.5)):
+            contacts = [(x, y, z) for x, y, z in shared
+                        if abs(abs(z) - half_length) < 1e-6
+                        and (x - cx) ** 2 + (y - cy) ** 2 <= radius ** 2 + 1e-4]
+            self.assertGreaterEqual(len(contacts), 4)
+
+    def test_base_stem_and_gripper_material_boundaries(self):
+        from render_profile import arm_mesh
+        vertices, edges = arm_mesh()
+        pedestal = [material for a, b, material in edges if a < 16 and b < 16]
+        stem = [material for a, b, material in edges if 16 <= a < 32 and 16 <= b < 32]
+        self.assertTrue(pedestal)
+        self.assertTrue(stem)
+        self.assertTrue(all(material is True for material in pedestal))
+        self.assertTrue(all(material == "terrain" for material in stem))
+        fingers = [material for a, b, material in edges if vertices[a][0] > 80 and vertices[b][0] > 80]
+        self.assertTrue(fingers)
+        self.assertEqual(set(fingers), {"terrain"})
+        vertices, edges, _, _, _ = arm_drawing_graph()
+        attachments = [material for a, b, material, _, _ in edges
+                       if {round(vertices[a][1], 2), round(vertices[b][1], 2)} == {-88.5, -89.0}]
+        self.assertTrue(attachments)
+        self.assertTrue(all(material is True for material in attachments))
+
     def test_wrist_gripper_and_connectors_use_the_terrain_material(self):
         vertices, edges, _, _, _ = arm_drawing_graph()
         self.assertEqual({material for _, _, material, _, _ in edges}, {True, "terrain"})

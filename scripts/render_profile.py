@@ -370,50 +370,96 @@ def backdrop(accent, show_sun=True, emphasis=0, show_terrain=True):
 def arm_mesh():
     """An industrial manipulator: pedestal, three links, joint barrels, and gripper."""
     vertices, edges = [], []
+    joint_contacts = {}
 
     def shape(points, connections, secondary=False):
         offset = len(vertices)
         vertices.extend(points)
         edges.extend((offset + a, offset + b, secondary) for a, b in connections)
 
-    def barrel(center, radius, length, axis="z", sides=10):
+    def barrel(center, radius, length, axis="z", sides=10, material=True):
+        ring = [(radius * math.cos(math.tau * i / sides),
+                 radius * math.sin(math.tau * i / sides)) for i in range(sides)]
+        if axis == "z":
+            ring.extend(joint_contacts.get(center, []))
+            ring = list({(round(x, 8), round(y, 8)): (x, y) for x, y in ring}.values())
+            ring.sort(key=lambda point: math.atan2(point[1], point[0]) % math.tau)
+        count = len(ring)
         points = []
         for end in (-length / 2, length / 2):
-            for i in range(sides):
-                angle = math.tau * i / sides
-                u, v = radius * math.cos(angle), radius * math.sin(angle)
+            for u, v in ring:
                 delta = (u, end, v) if axis == "y" else (u, v, end)
                 points.append(tuple(center[j] + delta[j] for j in range(3)))
-        connections = [(i, (i + 1) % sides) for i in range(sides)]
-        connections += [(i + sides, (i + 1) % sides + sides) for i in range(sides)]
-        connections += [(i, i + sides) for i in range(0, sides, 2)]
-        shape(points, connections, True)
+        connections = [(i, (i + 1) % count) for i in range(count)]
+        connections += [(i + count, (i + 1) % count + count) for i in range(count)]
+        supports = {(round(radius * math.cos(math.tau * i / sides), 8),
+                     round(radius * math.sin(math.tau * i / sides), 8)) for i in range(0, sides, 2)}
+        connections += [(i, i + count) for i, (u, v) in enumerate(ring)
+                        if (round(u, 8), round(v, 8)) in supports]
+        shape(points, connections, material)
 
-    def beam(start, end, width, depth, material="terrain"):
+    def joint_profile(center, direction, normal, width, joint):
+        radius, length = joint
+        polygon = [(radius * math.cos(math.tau * i / 10),
+                    radius * math.sin(math.tau * i / 10)) for i in range(10)]
+        contacts = []
+        for side in (1, -1):
+            origin = (normal[0] * width * side, normal[1] * width * side)
+            intersections = []
+            for a, b in zip(polygon, polygon[1:] + polygon[:1]):
+                edge = (b[0] - a[0], b[1] - a[1])
+                delta = (a[0] - origin[0], a[1] - origin[1])
+                denominator = direction[0] * edge[1] - direction[1] * edge[0]
+                if abs(denominator) < 1e-9:
+                    continue
+                distance = (delta[0] * edge[1] - delta[1] * edge[0]) / denominator
+                fraction = (delta[0] * direction[1] - delta[1] * direction[0]) / denominator
+                if distance >= 0 and -1e-9 <= fraction <= 1 + 1e-9:
+                    intersections.append(distance)
+            distance = min(intersections)
+            contact = (origin[0] + distance * direction[0], origin[1] + distance * direction[1])
+            joint_contacts.setdefault(center, []).append(contact)
+            contacts.append((center[0] + contact[0], center[1] + contact[1]))
+        plus, minus = contacts
+        return [(plus[0], plus[1], center[2] - length / 2),
+                (minus[0], minus[1], center[2] - length / 2),
+                (minus[0], minus[1], center[2] + length / 2),
+                (plus[0], plus[1], center[2] + length / 2)]
+
+    def beam(start, end, width, depth, material="terrain", brace_material=None,
+             start_joint=None, end_joint=None):
         dx, dy = end[0] - start[0], end[1] - start[1]
         length = math.hypot(dx, dy)
         nx, ny = -dy / length * width, dx / length * width
         points = []
-        for x, y, z in (start, end):
-            points.extend([(x + nx, y + ny, z - depth), (x - nx, y - ny, z - depth),
-                           (x - nx, y - ny, z + depth), (x + nx, y + ny, z + depth)])
+        direction = (dx / length, dy / length)
+        normal = (-direction[1], direction[0])
+        for center, joint, outward in ((start, start_joint, direction),
+                                       (end, end_joint, (-direction[0], -direction[1]))):
+            if joint is not None:
+                points.extend(joint_profile(center, outward, normal, width, joint))
+            else:
+                x, y, z = center
+                points.extend([(x + nx, y + ny, z - depth), (x - nx, y - ny, z - depth),
+                               (x - nx, y - ny, z + depth), (x + nx, y + ny, z + depth)])
         shape(points, [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6),
                        (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)], material)
-        shape([points[0], points[5], points[3], points[6]], [(0, 1), (2, 3)], True)
+        shape([points[0], points[5], points[3], points[6]], [(0, 1), (2, 3)],
+              material if brace_material is None else brace_material)
 
     barrel((-20, -96, 0), 44, 15, "y", 8)
-    barrel((-20, -73, 0), 23, 32, "y", 8)
+    barrel((-20, -73, 0), 23, 32, "y", 8, material="terrain")
     shoulder, elbow, wrist, tool = (-20, -48, 0), (-56, 38, 0), (38, 82, 0), (68, 57, 0)
-    beam(shoulder, elbow, 12, 13, material="terrain")
-    beam(elbow, wrist, 10, 10, material="terrain")
-    beam(wrist, tool, 8, 8)
+    beam(shoulder, elbow, 12, 13, start_joint=(18, 36), end_joint=(17, 32))
+    beam(elbow, wrist, 10, 10, start_joint=(17, 32), end_joint=(12, 25))
+    beam(wrist, tool, 8, 8, brace_material="terrain", start_joint=(12, 25), end_joint=(10, 28))
     for center, radius, length in ((shoulder, 18, 36), (elbow, 17, 32), (wrist, 12, 25)):
         barrel(center, radius, length)
-    barrel(tool, 10, 28)
+    barrel(tool, 10, 28, material="terrain")
     # two offset jaws form a physical parallel gripper, rather than fingers on a hand
     for z in (-17, 17):
-        beam((68, 57, z), (89, 39, z), 4, 3)
-        beam((89, 39, z), (98, 31, z * 0.55), 3, 3)
+        beam((68, 57, z), (89, 39, z), 4, 3, brace_material="terrain")
+        beam((89, 39, z), (98, 31, z * 0.55), 3, 3, brace_material="terrain")
     return vertices, edges
 
 
@@ -455,7 +501,9 @@ def arm_drawing_graph():
             break
         a, b = min(((a, b) for a in reached for b in outside),
                    key=lambda pair: math.dist(vertices[pair[0]], vertices[pair[1]]))
-        edges.append((a, b, "terrain"))
+        # the short attachment within the pedestal shares its orange material
+        material = True if max(vertices[a][1], vertices[b][1]) <= -88.5 else "terrain"
+        edges.append((a, b, material))
         connect(a, b)
         pending.append(b)
     distances = [math.inf] * len(vertices)
