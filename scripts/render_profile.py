@@ -223,13 +223,24 @@ def github_weekly_activity(username, today=None, include_monthly=False):
 
 @lru_cache(maxsize=1)
 def sun_bands():
-    horizon, radius, center = 286, 72, SIZE[0] / 2
+    horizon, radius, center = 286, 84, SIZE[0] / 2
+    center_y = horizon - 40
+    top = center_y - radius
+    # gaps grow by two pixels from four to ten toward the horizon
+    segments = [(0, 48)]
+    cursor, gap = 48, 4
+    for height in (18, 16, 10, 4):
+        cursor += gap
+        segments.append((cursor, cursor + height))
+        cursor += height
+        gap += 2
     bands = []
-    for y in range(horizon - radius, horizon):
-        if (y - horizon + radius) % 12 >= 8:
+    for y in range(top, horizon):
+        offset = y - top
+        if not any(start <= offset < end for start, end in segments):
             continue
-        half_width = math.sqrt(radius ** 2 - (y - horizon) ** 2)
-        strength = 0.18 - 0.06 * (y - horizon + radius) / radius
+        half_width = math.sqrt(radius ** 2 - (y - center_y) ** 2)
+        strength = 0.18 - 0.06 * offset / (horizon - top)
         bands.append((y, round(center - half_width), round(center + half_width), strength))
     return tuple(bands)
 
