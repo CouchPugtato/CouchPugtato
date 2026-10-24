@@ -455,11 +455,11 @@ def arm_mesh():
     beam(wrist, tool, 8, 8, brace_material="terrain", start_joint=(12, 25), end_joint=(10, 28))
     for center, radius, length in ((shoulder, 18, 36), (elbow, 17, 32), (wrist, 12, 25)):
         barrel(center, radius, length)
-    barrel(tool, 10, 28, material="terrain")
+    barrel(tool, 10, 28, material=True)
     # two offset jaws form a physical parallel gripper, rather than fingers on a hand
     for z in (-17, 17):
-        beam((68, 57, z), (89, 39, z), 4, 3, brace_material="terrain")
-        beam((89, 39, z), (98, 31, z * 0.55), 3, 3, brace_material="terrain")
+        beam((68, 57, z), (89, 39, z), 4, 3, material=True, brace_material=True)
+        beam((89, 39, z), (98, 31, z * 0.55), 3, 3, material=True, brace_material=True)
     return vertices, edges
 
 
@@ -502,7 +502,9 @@ def arm_drawing_graph():
         a, b = min(((a, b) for a in reached for b in outside),
                    key=lambda pair: math.dist(vertices[pair[0]], vertices[pair[1]]))
         # the short attachment within the pedestal shares its orange material
-        material = True if max(vertices[a][1], vertices[b][1]) <= -88.5 else "terrain"
+        orange_attachment = (max(vertices[a][1], vertices[b][1]) <= -88.5
+                             or min(vertices[a][0], vertices[b][0]) > 55)
+        material = True if orange_attachment else "terrain"
         edges.append((a, b, material))
         connect(a, b)
         pending.append(b)

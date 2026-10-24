@@ -47,20 +47,20 @@ class RendererTests(unittest.TestCase):
         self.assertTrue(all(material == "terrain" for material in stem))
         fingers = [material for a, b, material in edges if vertices[a][0] > 80 and vertices[b][0] > 80]
         self.assertTrue(fingers)
-        self.assertEqual(set(fingers), {"terrain"})
+        self.assertEqual(set(fingers), {True})
         vertices, edges, _, _, _ = arm_drawing_graph()
         attachments = [material for a, b, material, _, _ in edges
                        if {round(vertices[a][1], 2), round(vertices[b][1], 2)} == {-88.5, -89.0}]
         self.assertTrue(attachments)
         self.assertTrue(all(material is True for material in attachments))
 
-    def test_wrist_gripper_and_connectors_use_the_terrain_material(self):
+    def test_arm_has_blue_links_and_an_orange_claw(self):
         vertices, edges, _, _, _ = arm_drawing_graph()
         self.assertEqual({material for _, _, material, _, _ in edges}, {True, "terrain"})
         finger_edges = [(a, b, material) for a, b, material, _, _ in edges
                         if vertices[a][0] > 80 and vertices[b][0] > 80]
         self.assertTrue(finger_edges)
-        self.assertTrue(any(material == "terrain" for _, _, material in finger_edges))
+        self.assertTrue(all(material is True for _, _, material in finger_edges))
 
     def test_sun_waits_until_terrain_is_fully_drawn(self):
         from render_profile import particle_motion, formation_fades
