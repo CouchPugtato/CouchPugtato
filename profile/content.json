@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,005",
+      "value": "1,006",
       "label": "COMMITS"
     },
     {
@@ -28,7 +28,7 @@
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
     "Python": 2520070,
-    "JavaScript": 1800827,
+    "JavaScript": 1837754,
     "C": 1793962,
     "Rust": 550100,
     "Go": 318022,
@@ -262,7 +262,7 @@
         {
           "name": "CouchPugtato/Statfolio-5e",
           "last_commit": "2026-10-24",
-          "commits": 37
+          "commits": 38
         },
         {
           "name": "CouchPugtato/Graph-as-Policy-Robotics-Benchmark",
