@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "997",
+      "value": "1,005",
       "label": "COMMITS"
     },
     {
@@ -27,9 +27,9 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2439486,
+    "Python": 2520070,
+    "JavaScript": 1800827,
     "C": 1793962,
-    "JavaScript": 1765972,
     "Rust": 550100,
     "Go": 318022,
     "Java": 147226,
@@ -39,7 +39,7 @@
     "NSIS": 12496,
     "C++": 9884,
     "CMake": 9870,
-    "PowerShell": 6894,
+    "PowerShell": 8173,
     "TypeScript": 5158,
     "Dockerfile": 334,
     "Batchfile": 120
@@ -260,19 +260,19 @@
       "partial": true,
       "items": [
         {
-          "name": "CouchPugtato/graph-as-policy-mvp",
-          "last_commit": "2026-10-22",
-          "commits": 20
+          "name": "CouchPugtato/Statfolio-5e",
+          "last_commit": "2026-10-24",
+          "commits": 37
         },
         {
-          "name": "CouchPugtato/Statfolio-5e",
-          "last_commit": "2026-10-22",
-          "commits": 33
+          "name": "CouchPugtato/Graph-as-Policy-Robotics-Benchmark",
+          "last_commit": "2026-10-24",
+          "commits": 22
         },
         {
           "name": "CouchPugtato/CouchPugtato",
-          "last_commit": "2026-10-22",
-          "commits": 16
+          "last_commit": "2026-10-24",
+          "commits": 18
         },
         {
           "name": "CouchPugtato/Vortex",
@@ -322,7 +322,7 @@
     "couchpugtato/exponential-elytra": {
       "language": "Java"
     },
-    "couchpugtato/graph-as-policy-mvp": {
+    "couchpugtato/graph-as-policy-robotics-benchmark": {
       "language": "Python"
     },
     "couchpugtato/howmanylines": {
