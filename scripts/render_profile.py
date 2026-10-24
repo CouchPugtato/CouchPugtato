@@ -21,6 +21,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SIZE = (1100, 440)
 BG, PANEL, INK, MUTED = "#08060d", "#1d142e", "#f5edff", "#bdabcd"
 SECONDARY = "#ff9a52"
+TERRAIN = "#4493f8"
+TIMELINE_SECONDS = 12.5
 
 
 @lru_cache(maxsize=64)
@@ -223,12 +225,12 @@ def github_weekly_activity(username, today=None, include_monthly=False):
 
 @lru_cache(maxsize=1)
 def sun_bands():
-    horizon, radius, center = 286, 84, SIZE[0] / 2
-    center_y = horizon - 40
+    horizon, radius, center = 286, 112, SIZE[0] / 2
+    center_y = horizon - 48
     top = center_y - radius
     # gaps grow by two pixels from four to ten toward the horizon
-    segments = [(0, 48)]
-    cursor, gap = 48, 4
+    segments = [(0, 84)]
+    cursor, gap = 84, 4
     for height in (18, 16, 10, 4):
         cursor += gap
         segments.append((cursor, cursor + height))
@@ -254,8 +256,51 @@ def sun_mask():
     return mask
 
 
+@lru_cache(maxsize=1)
+def terrain_mesh():
+    horizon, center = 286, SIZE[0] / 2
+    rng = random.Random(107)
+    ridge, middle, base = [], [], []
+    for index, x in enumerate(range(-46, SIZE[0] + 47, 46)):
+        valley = min(1, max(0, (abs(x - center) - 140) / 100))
+        valley = valley * valley * (3 - 2 * valley)
+        height = valley * rng.uniform(16, 44)
+        ridge.append((x, round(horizon - height)))
+        middle.append((x + (7 if index % 2 else -7), round(horizon - height * 0.45)))
+        base.append((x, horizon))
+    faces = []
+    for index in range(len(ridge) - 1):
+        for upper, lower in ((ridge, middle), (middle, base)):
+            for triangle in ((upper[index], upper[index + 1], lower[index]),
+                             (upper[index + 1], lower[index + 1], lower[index])):
+                if min(y for _, y in triangle) < horizon - 1:
+                    faces.append((triangle, 0.12 + 0.04 * (index % 3)))
+    return faces
+
+
+@lru_cache(maxsize=1)
+def terrain_wire_mask():
+    mask = Image.new("L", SIZE, 0)
+    draw = ImageDraw.Draw(mask)
+    for triangle, _ in terrain_mesh():
+        draw.polygon(triangle, outline=255)
+    center = SIZE[0] // 2
+    draw.rectangle((center - 140, 0, center + 140, SIZE[1]), fill=0)
+    return mask
+
+
+@lru_cache(maxsize=1)
+def reconstruction_mask():
+    return ImageChops.lighter(sun_mask(), terrain_wire_mask())
+
+
+def terrain_particle_delay(x):
+    edge_distance = min(x, SIZE[0] - 1 - x)
+    return 0.45 * min(1, max(0, edge_distance / ((SIZE[0] - 1) / 2 - 140)))
+
+
 @lru_cache(maxsize=8)
-def _backdrop_base(accent, show_sun=True, emphasis=0):
+def _backdrop_base(accent, show_sun=True, emphasis=0, show_terrain=True):
     image = Image.new("RGB", SIZE, BG)
     draw = ImageDraw.Draw(image)
     background_rgb = ImageColor.getrgb(BG)
@@ -275,20 +320,35 @@ def _backdrop_base(accent, show_sun=True, emphasis=0):
         draw.line(points, fill=lit_color("#1a1125"))
     horizon, vanishing_y = 286, 254
     center = SIZE[0] / 2
+    # a shallow faceted silhouette sits directly on the floor edge
+    terrain_rgb = ImageColor.getrgb(TERRAIN)
+    terrain_strength = 0.24 + 0.76 * emphasis
+    terrain_faces = []
+    edge = tuple(round(bg + (blue - bg) * terrain_strength)
+                 for bg, blue in zip(background_rgb, terrain_rgb))
+    for triangle, shade in terrain_mesh() if show_terrain else ():
+        face = tuple(round(bg + (blue - bg) * terrain_strength * shade)
+                     for bg, blue in zip(background_rgb, terrain_rgb))
+        terrain_faces.append((triangle, face, edge))
     sun_rgb = ImageColor.getrgb(SECONDARY)
     for y, left, right, strength in sun_bands() if show_sun else ():
         strength += (1 - strength) * emphasis
         color = tuple(round(bg + (sun - bg) * strength)
                       for bg, sun in zip(background_rgb, sun_rgb))
         draw.line((left, y, right, y), fill=color)
+    # retain the original floor perspective while extending rays to both edges
     perspective = (horizon - vanishing_y) / (SIZE[1] - vanishing_y)
-    for x in range(-SIZE[0], SIZE[0] * 2 + 1, 120):
+    ray_count = math.ceil((SIZE[0] / 2) / perspective / 120) + 1
+    for index in range(-ray_count, ray_count + 1):
+        x = center + index * 120
         start_x = center + (x - center) * perspective
-        draw.line((round(start_x), horizon, x, SIZE[1]), fill=lit_color("#22162f"))
+        draw.line((round(start_x), horizon, round(x), SIZE[1]), fill=lit_color("#22162f"))
     for distance in (5, 12, 23, 40, 65, 99, 143):
         y = horizon + distance
         draw.line((0, y, SIZE[0], y), fill=lit_color("#22162f"))
     draw.line((0, horizon, SIZE[0], horizon), fill=lit_color("#22162f"))
+    for triangle, face, edge in terrain_faces:
+        draw.polygon(triangle, fill=face, outline=edge)
     # curved glass shading grows stronger toward the screen borders
     shading = Image.new("RGBA", SIZE)
     horizontal = [abs((x - SIZE[0] / 2) / (SIZE[0] / 2)) ** 6 for x in range(SIZE[0])]
@@ -302,8 +362,8 @@ def _backdrop_base(accent, show_sun=True, emphasis=0):
     return image
 
 
-def backdrop(accent, show_sun=True, emphasis=0):
-    return _backdrop_base(accent, show_sun, emphasis).copy()
+def backdrop(accent, show_sun=True, emphasis=0, show_terrain=True):
+    return _backdrop_base(accent, show_sun, emphasis, show_terrain).copy()
 
 
 @lru_cache(maxsize=1)
@@ -329,7 +389,7 @@ def arm_mesh():
         connections += [(i, i + sides) for i in range(0, sides, 2)]
         shape(points, connections, True)
 
-    def beam(start, end, width, depth):
+    def beam(start, end, width, depth, material="terrain"):
         dx, dy = end[0] - start[0], end[1] - start[1]
         length = math.hypot(dx, dy)
         nx, ny = -dy / length * width, dx / length * width
@@ -338,14 +398,14 @@ def arm_mesh():
             points.extend([(x + nx, y + ny, z - depth), (x - nx, y - ny, z - depth),
                            (x - nx, y - ny, z + depth), (x + nx, y + ny, z + depth)])
         shape(points, [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6),
-                       (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)])
+                       (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)], material)
         shape([points[0], points[5], points[3], points[6]], [(0, 1), (2, 3)], True)
 
     barrel((-20, -96, 0), 44, 15, "y", 8)
     barrel((-20, -73, 0), 23, 32, "y", 8)
     shoulder, elbow, wrist, tool = (-20, -48, 0), (-56, 38, 0), (38, 82, 0), (68, 57, 0)
-    beam(shoulder, elbow, 12, 13)
-    beam(elbow, wrist, 10, 10)
+    beam(shoulder, elbow, 12, 13, material="terrain")
+    beam(elbow, wrist, 10, 10, material="terrain")
     beam(wrist, tool, 8, 8)
     for center, radius, length in ((shoulder, 18, 36), (elbow, 17, 32), (wrist, 12, 25)):
         barrel(center, radius, length)
@@ -395,7 +455,7 @@ def arm_drawing_graph():
             break
         a, b = min(((a, b) for a in reached for b in outside),
                    key=lambda pair: math.dist(vertices[pair[0]], vertices[pair[1]]))
-        edges.append((a, b, False))
+        edges.append((a, b, "terrain"))
         connect(a, b)
         pending.append(b)
     distances = [math.inf] * len(vertices)
@@ -443,6 +503,8 @@ def point_opacity(elapsed, born, finished):
 
 
 def arm_line_color(accent, secondary=False):
+    if secondary == "terrain":
+        return ImageColor.getrgb(TERRAIN)
     return ImageColor.getrgb(SECONDARY if secondary else accent)
 
 
@@ -670,7 +732,7 @@ def initialization_progress(draw, config, percent):
 
 
 def loading_scene(config, progress):
-    image = backdrop(config["accent"], show_sun=False, emphasis=1)
+    image = backdrop(config["accent"], show_sun=False, emphasis=1, show_terrain=False)
     draw = ImageDraw.Draw(image)
     accent = config["accent"]
     text(draw, (72, 33), "LINUX / PROFILE INITIALIZATION", 12, 780, 1, accent)
@@ -679,8 +741,8 @@ def loading_scene(config, progress):
     points_layer = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     robot_arm(draw, (255, 200), 1.1, progress, accent,
               build=min(1, progress / 0.9), rotation=progress * math.pi / 4,
-              elapsed_seconds=progress * config["duration_seconds"] * 0.5,
-              drawing_seconds=config["duration_seconds"] * 0.45,
+              elapsed_seconds=progress * config["duration_seconds"] * 5 / TIMELINE_SECONDS,
+              drawing_seconds=config["duration_seconds"] * 4.5 / TIMELINE_SECONDS,
               point_draw=ImageDraw.Draw(points_layer))
     image = Image.alpha_composite(image.convert("RGBA"), point_coverage(points_layer)).convert("RGB")
     draw = ImageDraw.Draw(image)
@@ -705,89 +767,106 @@ def loading_scene(config, progress):
 
 @lru_cache(maxsize=1)
 def reconstruction_particles():
-    """Map arm-edge samples into the existing striped horizon sun."""
-    targets = [(x, y) for y, left, right, _ in sun_bands()
-               for x in range(left, right + 1)]
+    """Route blue beam samples into terrain and other samples into the sun."""
+    sun_targets = [(x, y) for y, left, right, _ in sun_bands()
+                   for x in range(left, right + 1)]
+    mask = terrain_wire_mask().load()
+    terrain_targets = [(x, y) for y in range(242, 287) for x in range(SIZE[0]) if mask[x, y]]
     vertices, edges = arm_mesh()
     points = project_arm(vertices, (255, 200), 1.1, 1.0, rotation=math.pi / 4)
+    pools = {"sun": [edge for edge in edges if edge[2] != "terrain"],
+             "terrain": [edge for edge in edges if edge[2] == "terrain"]}
     rng = random.Random(509)
     particles = []
-    for target in targets:
-        a, b, secondary = edges[rng.randrange(len(edges))]
-        t = rng.random()
-        source = tuple(points[a][axis] * (1 - t) + points[b][axis] * t for axis in range(2))
-        bend = (rng.uniform(-90, 90), rng.uniform(-85, 85))
-        particles.append((source, target, bend, 0, secondary))
-    left = min(target[0] for _, target, _, _, _ in particles)
-    right = max(target[0] for _, target, _, _, _ in particles)
-    span = max(1, right - left)
-    # fill the far side of the sun first and sweep back toward the arm
-    return [(source, target, bend, 0.45 * (right - target[0]) / span, secondary)
-            for source, target, bend, _, secondary in particles]
+    left = min(x for x, _ in sun_targets)
+    right = max(x for x, _ in sun_targets)
+    for destination, targets in (("sun", sun_targets), ("terrain", terrain_targets)):
+        pool = pools[destination]
+        for target in targets:
+            a, b, material = pool[rng.randrange(len(pool))]
+            t = rng.random()
+            source = tuple(points[a][axis] * (1 - t) + points[b][axis] * t for axis in range(2))
+            delay = (terrain_particle_delay(target[0]) if destination == "terrain"
+                     else 0.45 * (right - target[0]) / max(1, right - left))
+            particles.append((source, target, destination, delay, material))
+    return particles
+
+
+def particle_motion(destination, elapsed, delay):
+    start = 0.52 if destination == "terrain" else 3.04
+    return max(0, min(1, (elapsed - start - 2 * delay) / 1.2))
+
+
+def formation_fades(elapsed):
+    terrain = max(0, min(1, (elapsed - 2.64) / 0.4))
+    sun = max(0, min(1, (elapsed - 5.14) / 0.4))
+    return tuple(value * value * (3 - 2 * value) for value in (terrain, sun))
 
 
 def reconstruction_scene(config, progress, final):
-    # timeline seconds use the default ten second duration as the reference
-    elapsed = progress * 3.74
-    motion = max(0, elapsed - 0.34) / 2
-    backdrop_image = backdrop(config["accent"], show_sun=False, emphasis=1)
+    elapsed = progress * 6.24
+    terrain_settle, sun_settle = formation_fades(elapsed)
+    backdrop_image = backdrop(config["accent"], show_sun=False, emphasis=1, show_terrain=False)
     loader = loading_scene(config, 1.0)
     image = Image.blend(loader, backdrop_image, min(1, elapsed / 0.46))
+    image = Image.blend(image, backdrop(config["accent"], show_sun=False, emphasis=1), terrain_settle)
+    image = Image.blend(image, backdrop(config["accent"], emphasis=1), sun_settle)
     glow = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     draw = ImageDraw.Draw(glow)
     settled_points = Image.new("RGBA", SIZE, (0, 0, 0, 0))
     settled_draw = ImageDraw.Draw(settled_points)
-    opacity = round(255 * min(1, elapsed / 0.16))
+    appearance = min(1, elapsed / 0.16)
     cores = []
-    for source, target, bend, delay, secondary in reconstruction_particles():
-        local = max(0, min(1, (motion - 0.09 - delay) / 0.6))
+    for source, target, destination, delay, material in reconstruction_particles():
+        local = particle_motion(destination, elapsed, delay)
         ease = local * local * (3 - 2 * local)
         x = source[0] + (target[0] - source[0]) * ease
         y = source[1] + (target[1] - source[1]) * ease
-        source_rgb = arm_line_color(config["accent"], secondary)
-        sun_rgb = ImageColor.getrgb(SECONDARY)
-        rgb = tuple(round(source + (sun - source) * ease) for source, sun in zip(source_rgb, sun_rgb))
-        # halos fade as the dense cores settle into the exact sun pixels
+        if destination == "terrain":
+            arc_height = min(110, 35 + abs(target[0] - source[0]) * 0.12)
+            y -= arc_height * math.sin(math.pi * ease)
+        source_rgb = arm_line_color(config["accent"], material)
+        target_rgb = ImageColor.getrgb(TERRAIN if destination == "terrain" else SECONDARY)
+        rgb = tuple(round(source + (target - source) * ease) for source, target in zip(source_rgb, target_rgb))
+        dissolve = terrain_settle if destination == "terrain" else sun_settle
+        opacity = round(255 * appearance * (1 - dissolve))
+        if not opacity:
+            continue
+        # halos fade as dense cores settle into their destination outlines
         halo_opacity = round(opacity * 0.18 * (1 - ease))
         if halo_opacity:
             draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=rgb + (halo_opacity,))
-        cores.append((round(x), round(y), rgb, local >= 1))
-    for x, y, rgb, arrived in cores:
+        cores.append((round(x), round(y), rgb, opacity, local >= 1))
+    for x, y, rgb, opacity, arrived in cores:
         target_draw = settled_draw if arrived else draw
         target_draw.rectangle((x - 1, y - 1, x + 1, y + 1), fill=rgb + (opacity,))
-    # settled points share the drawn sun mask so their larger cores cannot bridge gaps
-    settled_points.putalpha(ImageChops.multiply(settled_points.getchannel("A"), sun_mask()))
+    settled_points.putalpha(ImageChops.multiply(settled_points.getchannel("A"), reconstruction_mask()))
     glow = Image.alpha_composite(glow, settled_points)
     image = Image.alpha_composite(image.convert("RGBA"), glow).convert("RGB")
-    # dissolve the points into the drawn sun before the profile appears
-    settle = max(0, min(1, (elapsed - 2.64) / 0.4))
-    settle = settle * settle * (3 - 2 * settle)
-    image = Image.blend(image, backdrop(config["accent"], emphasis=1), settle)
-    # the profile service remains in progress until reconstruction is complete
     footer_box = (65, 395, 1030, 420)
     image.paste(backdrop_image.crop(footer_box), footer_box[:2])
-    # loading is complete before its text and full bar dissolve with the arm
-    status = "[ .... ] profile.service: reconstructing interface"
+    stage = "terrain" if elapsed < 3.04 else "sun"
+    status = f"[ .... ] profile.service: reconstructing {stage}"
     text(ImageDraw.Draw(image), (72, 400), status, 11, 956, 1, config["accent"])
-    # hold the drawn sun alone for a beat before revealing the profile
-    if elapsed > 3.44:
-        fade = min(1, (elapsed - 3.44) / 0.3)
+    if elapsed > 5.94:
+        fade = min(1, (elapsed - 5.94) / 0.3)
         fade = fade * fade * (3 - 2 * fade)
         image = Image.blend(image, profile_scene(config, ready=False), fade)
     return image
 
 
 def scene(config, phase, final=None):
-    if phase <= 0.1:
+    elapsed = phase * TIMELINE_SECONDS
+    if elapsed <= 1:
         return loading_scene(config, 0)
-    if phase <= 0.6:
-        return loading_scene(config, (phase - 0.1) / 0.5)
-    if phase <= 0.615:
+    if elapsed <= 6:
+        return loading_scene(config, (elapsed - 1) / 5)
+    if elapsed <= 6.15:
         return loading_scene(config, 1.0)
     final = final if final is not None else profile_scene(config)
-    if phase >= 0.989:
+    if elapsed >= 12.39:
         return final.copy()
-    return reconstruction_scene(config, (phase - 0.615) / 0.374, final)
+    return reconstruction_scene(config, (elapsed - 6.15) / 6.24, final)
 
 
 def render(config_path: Path, output: Path) -> tuple[Path, Path]:
@@ -799,12 +878,12 @@ def render(config_path: Path, output: Path) -> tuple[Path, Path]:
     palette_source.paste(final, (0, 0))
     palette_source.paste(backdrop(config["accent"], emphasis=1), (0, SIZE[1]))
     palette = palette_source.quantize(colors=128)
-    # reserve the exact purple and orange arm colors
+    # reserve the exact purple orange and blue arm colors
     entries = palette.getpalette()
     arm_colors = []
-    for secondary in (False, True):
+    for secondary in (False, True, "terrain"):
         arm_colors.extend(arm_line_color(config["accent"], secondary))
-    entries[128 * 3:130 * 3] = arm_colors
+    entries[128 * 3:131 * 3] = arm_colors
     palette.putpalette(entries)
     frames = []
     for index in range(count):

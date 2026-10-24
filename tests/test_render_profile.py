@@ -13,8 +13,57 @@ from render_profile import ROOT, SIZE, loading_scene, read_config, render, robot
 
 
 class RendererTests(unittest.TestCase):
+    def test_wrist_gripper_and_connectors_use_the_terrain_material(self):
+        vertices, edges, _, _, _ = arm_drawing_graph()
+        self.assertEqual({material for _, _, material, _, _ in edges}, {True, "terrain"})
+        finger_edges = [(a, b, material) for a, b, material, _, _ in edges
+                        if vertices[a][0] > 80 and vertices[b][0] > 80]
+        self.assertTrue(finger_edges)
+        self.assertTrue(any(material == "terrain" for _, _, material in finger_edges))
+
+    def test_sun_waits_until_terrain_is_fully_drawn(self):
+        from render_profile import particle_motion, formation_fades
+        for elapsed in (0, 1, 2.62, 3.039):
+            self.assertEqual(particle_motion("sun", elapsed, 0), 0)
+        self.assertEqual(particle_motion("terrain", 3.04, 0.45), 1)
+        self.assertAlmostEqual(formation_fades(3.04)[0], 1)
+        self.assertEqual(formation_fades(3.04)[1], 0)
+        self.assertGreater(particle_motion("sun", 3.1, 0), 0)
+
+    def test_blue_beam_particles_form_only_terrain(self):
+        from render_profile import reconstruction_particles, terrain_wire_mask, sun_mask
+        particles = reconstruction_particles()
+        self.assertEqual({destination for _, _, destination, _, _ in particles}, {"sun", "terrain"})
+        for _, target, destination, _, material in particles:
+            self.assertEqual(material == "terrain", destination == "terrain")
+            mask = terrain_wire_mask() if destination == "terrain" else sun_mask()
+            self.assertEqual(mask.getpixel(target), 255)
+
+    def test_terrain_stagger_runs_outside_in_on_both_sides(self):
+        from render_profile import terrain_particle_delay
+        self.assertEqual(terrain_particle_delay(0), 0)
+        self.assertEqual(terrain_particle_delay(SIZE[0] - 1), 0)
+        previous = -1
+        for x in (0, 100, 200, 300, 400):
+            delay = terrain_particle_delay(x)
+            self.assertAlmostEqual(delay, terrain_particle_delay(SIZE[0] - 1 - x))
+            self.assertGreater(delay, previous)
+            previous = delay
+
+    def test_terrain_stays_at_horizon_with_an_open_sun_valley(self):
+        from render_profile import terrain_mesh
+        faces = terrain_mesh()
+        self.assertTrue(faces)
+        self.assertTrue(any(y == 286 for triangle, _ in faces for _, y in triangle))
+        for triangle, _ in faces:
+            self.assertTrue(all(242 <= y <= 286 for _, y in triangle))
+            for x, y in triangle:
+                if abs(x - SIZE[0] / 2) < 130:
+                    self.assertEqual(y, 286)
+
     def test_arm_links_keep_their_exact_colors_at_every_depth(self):
-        for secondary, base in ((False, (187, 140, 255)), (True, (255, 154, 82))):
+        for secondary, base in ((False, (187, 140, 255)), (True, (255, 154, 82)),
+                                ("terrain", (68, 147, 248))):
             graph = ([(0, 0, 0), (0, 10, 0)], [(0, 1, secondary, 0, 10)], [0, 10], 10, 0)
             for depth in (-100, 0, 80, 200):
                 draw = Mock()
@@ -93,9 +142,9 @@ class RendererTests(unittest.TestCase):
         indicator = ImageChops.difference(ready, waiting).getbbox()
         self.assertIsNotNone(indicator)
         with patch("render_profile.profile_scene", wraps=profile_scene) as draw_profile:
-            scene(config, 0.979, final=ready)
+            scene(config, 12.29 / 12.5, final=ready)
             draw_profile.assert_called_once_with(config, ready=False)
-        self.assertIsNone(ImageChops.difference(scene(config, 0.989).crop(indicator),
+        self.assertIsNone(ImageChops.difference(scene(config, 12.39 / 12.5).crop(indicator),
                                                ready.crop(indicator)).getbbox())
 
     def test_final_arm_has_no_vertex_highlights(self):
@@ -114,7 +163,7 @@ class RendererTests(unittest.TestCase):
                 self.assertEqual(animation.size, SIZE)
                 config = read_config(ROOT / "profile/content.json")
                 self.assertGreaterEqual(animation.info["duration"],
-                                        round(config["duration_seconds"] * 100),
+                                        round(config["duration_seconds"] * 80),
                                         "Opening frame must pause before drawing starts")
                 palette = animation.copy()
                 expected_opening = loading_scene(config, 0).quantize(
