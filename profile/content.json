@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,017",
+      "value": "1,026",
       "label": "COMMITS"
     },
     {
@@ -28,17 +28,17 @@
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
     "Python": 2533796,
-    "JavaScript": 1837754,
-    "C": 1809782,
-    "Rust": 550100,
+    "JavaScript": 1901856,
+    "C": 1842244,
+    "Rust": 616569,
     "Go": 318022,
     "Java": 147226,
+    "Shell": 30439,
     "Svelte": 27052,
-    "Shell": 24218,
     "Lua": 24018,
     "PowerShell": 22855,
     "NSIS": 12496,
-    "CMake": 10077,
+    "CMake": 10249,
     "C++": 9884,
     "TypeScript": 5158,
     "Dockerfile": 334,
@@ -260,14 +260,19 @@
       "partial": true,
       "items": [
         {
-          "name": "CouchPugtato/Statfolio-5e",
-          "last_commit": "2026-10-24",
-          "commits": 38
+          "name": "CouchPugtato/Vortex",
+          "last_commit": "2026-10-25",
+          "commits": 19
         },
         {
           "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-10-25",
+          "commits": 10
+        },
+        {
+          "name": "CouchPugtato/Statfolio-5e",
           "last_commit": "2026-10-24",
-          "commits": 3
+          "commits": 38
         },
         {
           "name": "CouchPugtato/Graph-as-Policy-Robotics-Benchmark",
@@ -278,11 +283,6 @@
           "name": "CouchPugtato/CouchPugtato",
           "last_commit": "2026-10-24",
           "commits": 26
-        },
-        {
-          "name": "CouchPugtato/Vortex",
-          "last_commit": "2026-10-18",
-          "commits": 17
         },
         {
           "name": "Zac1017/Red-Storm-509-T-Shirt-Cannon-Old-Version",
