@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,030",
+      "value": "1,034",
       "label": "COMMITS"
     },
     {
@@ -27,10 +27,10 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2579579,
-    "JavaScript": 1938748,
+    "Python": 2580800,
+    "JavaScript": 1947635,
     "C": 1842244,
-    "Rust": 644594,
+    "Rust": 674024,
     "Go": 318022,
     "Java": 147226,
     "Shell": 31622,
@@ -262,7 +262,12 @@
         {
           "name": "CouchPugtato/Vortex",
           "last_commit": "2026-10-25",
-          "commits": 21
+          "commits": 22
+        },
+        {
+          "name": "CouchPugtato/Statfolio-5e",
+          "last_commit": "2026-10-25",
+          "commits": 41
         },
         {
           "name": "CouchPugtato/Rep-Count",
@@ -273,11 +278,6 @@
           "name": "CouchPugtato/Project-Porygon",
           "last_commit": "2026-10-25",
           "commits": 10
-        },
-        {
-          "name": "CouchPugtato/Statfolio-5e",
-          "last_commit": "2026-10-24",
-          "commits": 38
         },
         {
           "name": "CouchPugtato/Graph-as-Policy-Robotics-Benchmark",
