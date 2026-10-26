@@ -29,7 +29,10 @@ TIMELINE_SECONDS = 12.5
 
 @lru_cache(maxsize=64)
 def font(size: int) -> ImageFont.FreeTypeFont:
+    if size <= 12:
+        return ImageFont.load_default(size=size)
     for candidate in (
+        str(ROOT / "profile/fonts/JetBrainsMono-Regular.ttf"),
         "DejaVuSansMono.ttf", "C:/Windows/Fonts/consola.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
         "/System/Library/Fonts/Menlo.ttc",
@@ -768,9 +771,6 @@ def activity_charts(draw, config):
         x = left + index * (right - left) / max(1, len(weeks) - 1)
         draw.line((x, bottom, x, bottom + 4), fill=MUTED)
         text(draw, (round(x) - 12, 356), day.strftime("%b"), 10, 35, 1, MUTED)
-    start = date.fromisoformat(weeks[0]["start"])
-    end = date.fromisoformat(weeks[-1]["start"]) + timedelta(days=6)
-    text(draw, (808, 379), f"{start:%b %d} - {end:%b %d} UTC", 10, 250, 1, MUTED)
 
 
 def profile_scene(config, ready=True):
@@ -781,8 +781,12 @@ def profile_scene(config, ready=True):
     text(draw, (72, 33), heading, 12, 780, 1, accent)
     status_x = 1028 - round(draw.textlength("dylan@couchpugtato:~$", font=font(11)))
     text(draw, (status_x, 33), "dylan@couchpugtato:~$", 11, 250, 1, SECONDARY)
-    text(draw, (40, 64), config["name"], profile_name_size(config["name"]), 720, 1)
-    draw.line((42, 124, 115, 124), fill=SECONDARY, width=2)
+    name_size = profile_name_size(config["name"])
+    text(draw, (40, 64), config["name"], name_size, 720, 1)
+    first_name = config["name"].split()[0]
+    left, _, right, bottom = draw.textbbox((40, 64), first_name, font=font(name_size))
+    underline_y = bottom + 12
+    draw.line((left + 3, underline_y, right - 3, underline_y), fill=SECONDARY, width=2)
     text(draw, (42, 145), config["description"], 16, 720, 3, MUTED)
     stats = config.get("stats", [])
     if stats:
@@ -790,7 +794,7 @@ def profile_scene(config, ready=True):
         summary = "   /   ".join(
             f"{stat['value']} {labels.get(stat['label'], stat['label'].lower())}"
             for stat in stats)
-        text(draw, (72, 400), summary, 12, 650, 1, "#a294af")
+        text(draw, (72, 400), summary, 12, 650, 1, accent)
     activity_charts(draw, config)
     language_chart(draw, config)
     draw.line((780, 72, 780, 384), fill="#49305e")
