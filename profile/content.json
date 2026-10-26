@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,034",
+      "value": "1,041",
       "label": "COMMITS"
     },
     {
@@ -27,10 +27,10 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2580800,
-    "JavaScript": 1947635,
-    "C": 1842244,
-    "Rust": 674024,
+    "Python": 2659143,
+    "JavaScript": 1975173,
+    "C": 1859021,
+    "Rust": 676438,
     "Go": 318022,
     "Java": 147226,
     "Shell": 31622,
@@ -38,7 +38,7 @@
     "Lua": 24018,
     "PowerShell": 22855,
     "NSIS": 12496,
-    "CMake": 10249,
+    "CMake": 10321,
     "C++": 9884,
     "TypeScript": 5158,
     "Dockerfile": 334,
@@ -63,10 +63,6 @@
     "TypeScript": 1
   },
   "weekly_activity": [
-    {
-      "start": "2026-04-20",
-      "commits": 7
-    },
     {
       "start": "2026-04-27",
       "commits": 0
@@ -166,6 +162,10 @@
     {
       "start": "2026-10-12",
       "commits": 36
+    },
+    {
+      "start": "2026-10-19",
+      "commits": 92
     }
   ],
   "monthly_repositories": [
@@ -261,23 +261,23 @@
       "items": [
         {
           "name": "CouchPugtato/Vortex",
-          "last_commit": "2026-10-25",
-          "commits": 22
+          "last_commit": "2026-10-26",
+          "commits": 25
+        },
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-10-26",
+          "commits": 13
         },
         {
           "name": "CouchPugtato/Statfolio-5e",
           "last_commit": "2026-10-25",
-          "commits": 41
+          "commits": 42
         },
         {
           "name": "CouchPugtato/Rep-Count",
           "last_commit": "2026-10-25",
           "commits": 2
-        },
-        {
-          "name": "CouchPugtato/Project-Porygon",
-          "last_commit": "2026-10-25",
-          "commits": 10
         },
         {
           "name": "CouchPugtato/Graph-as-Policy-Robotics-Benchmark",
