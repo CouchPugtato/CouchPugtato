@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,043",
+      "value": "1,045",
       "label": "COMMITS"
     },
     {
@@ -27,7 +27,7 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2661128,
+    "Python": 2661269,
     "JavaScript": 1987853,
     "C": 1870656,
     "Rust": 677726,
@@ -270,6 +270,11 @@
           "commits": 14
         },
         {
+          "name": "CouchPugtato/CouchPugtato",
+          "last_commit": "2026-10-26",
+          "commits": 28
+        },
+        {
           "name": "CouchPugtato/Statfolio-5e",
           "last_commit": "2026-10-25",
           "commits": 42
@@ -283,11 +288,6 @@
           "name": "CouchPugtato/Graph-as-Policy-Robotics-Benchmark",
           "last_commit": "2026-10-24",
           "commits": 22
-        },
-        {
-          "name": "CouchPugtato/CouchPugtato",
-          "last_commit": "2026-10-24",
-          "commits": 26
         },
         {
           "name": "Zac1017/Red-Storm-509-T-Shirt-Cannon-Old-Version",
