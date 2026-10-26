@@ -28,8 +28,8 @@ TIMELINE_SECONDS = 12.5
 
 
 @lru_cache(maxsize=64)
-def font(size: int) -> ImageFont.FreeTypeFont:
-    if size <= 12:
+def font(size: int, monospace=False) -> ImageFont.FreeTypeFont:
+    if size <= 12 and not monospace:
         return ImageFont.load_default(size=size)
     for candidate in (
         str(ROOT / "profile/fonts/JetBrainsMono-Regular.ttf"),
@@ -44,8 +44,8 @@ def font(size: int) -> ImageFont.FreeTypeFont:
     raise ValueError("No supported font found. Install DejaVu Sans Mono or edit font().")
 
 
-def text(draw, xy, value, size, width, max_lines, fill=INK):
-    face = font(size)
+def text(draw, xy, value, size, width, max_lines, fill=INK, monospace=False):
+    face = font(size, monospace=monospace)
     lines, current = [], ""
     for word in value.split():
         if draw.textlength(word, font=face) > width:
@@ -662,7 +662,7 @@ def profile_name_size(name):
 def language_colors(config):
     languages = sorted(((name, count) for name, count in config.get("languages", {}).items() if count),
                        key=lambda item: (-item[1], item[0]))
-    palette = (config["accent"], SECONDARY, "#769fe0", "#ffbb8a")
+    palette = (config["accent"], SECONDARY, TERRAIN, "#ffbb8a")
     return {**{name: color
                for (name, _), color in zip(languages[:4], palette)}, "Other": "#665673"}
 
@@ -720,11 +720,11 @@ def activity_charts(draw, config):
         x, y = 42 + index * 183, 314
         owner, _, name = repo["name"].partition("/")
         label = name if owner.casefold() == config.get("github_username", "").casefold() else repo["name"]
-        while draw.textlength(label, font=font(12)) > 147:
+        while draw.textlength(label, font=font(12, monospace=True)) > 147:
             label = label[:-4] + "..."
         draw.rounded_rectangle((x, y, x + 171, y + 70), radius=5, fill=PANEL, outline="#49305e")
         draw.line((x + 12, y + 27, x + 159, y + 27), fill="#49305e")
-        text(draw, (x + 12, y + 9), label, 12, 147, 1, INK)
+        text(draw, (x + 12, y + 9), label, 12, 147, 1, INK, monospace=True)
         language = config.get("repository_details", {}).get(repo["name"].casefold(), {}).get("language") or "Code"
         language_color = colors.get(language, colors["Other"])
         bounds = draw.textbbox((x + 24, y + 34), language, font=font(10))
@@ -819,7 +819,7 @@ def loading_scene(config, progress):
     image = backdrop(config["accent"], show_sun=False, emphasis=1, show_terrain=False)
     draw = ImageDraw.Draw(image)
     accent = config["accent"]
-    text(draw, (72, 33), "LINUX / PROFILE INITIALIZATION", 12, 780, 1, accent)
+    text(draw, (72, 33), "PROFILE / INITIALIZING", 12, 780, 1, accent)
     status_x = 1028 - round(draw.textlength("systemd[1]", font=font(11)))
     text(draw, (status_x, 33), "systemd[1]", 11, 110, 1, SECONDARY)
     points_layer = Image.new("RGBA", SIZE, (0, 0, 0, 0))
