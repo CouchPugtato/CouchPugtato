@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,049",
+      "value": "1,052",
       "label": "COMMITS"
     },
     {
@@ -27,10 +27,10 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 2661364,
+    "Python": 2690352,
     "JavaScript": 1987853,
     "C": 1870656,
-    "Rust": 677726,
+    "Rust": 695129,
     "Go": 318022,
     "Java": 147226,
     "Shell": 31622,
@@ -262,7 +262,7 @@
         {
           "name": "CouchPugtato/Vortex",
           "last_commit": "2026-10-26",
-          "commits": 26
+          "commits": 29
         },
         {
           "name": "CouchPugtato/Project-Porygon",
