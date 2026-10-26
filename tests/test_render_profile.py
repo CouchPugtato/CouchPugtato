@@ -1,5 +1,5 @@
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 import sys
 import tempfile
@@ -10,6 +10,7 @@ from PIL import Image, ImageChops, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from render_profile import ROOT, SIZE, loading_scene, read_config, render, robot_arm, refresh_github_stats, github_weekly_activity, recent_repositories, profile_scene, scene, arm_drawing_graph, project_arm, point_opacity
+from render_profile import balanced_weekly_activity
 
 
 class RendererTests(unittest.TestCase):
@@ -307,17 +308,37 @@ class GitHubStatsTests(unittest.TestCase):
                              {"Python": 2, "JavaScript": 2, "C": 1, "Rust": 1})
             self.assertNotIn("/repos/example/fork/languages", [call.args[0] for call in api.call_args_list])
 
-    def test_weekly_activity_uses_complete_monday_sunday_weeks(self):
+    def test_balanced_weeks_split_spikes_and_keep_exact_counts(self):
+        today = date(2026, 10, 21)
+        daily = {today - timedelta(days=i): 1 for i in range(1, 189)}
+        daily[date(2026, 10, 5)] += 10
+        daily[date(2026, 10, 11)] += 10
+        weeks = balanced_weekly_activity(daily, today)
+        self.assertEqual(weeks[0]["start"], "2026-04-22")
+        self.assertEqual(weeks[-1]["start"], "2026-10-14")
+        self.assertEqual(sorted(week["commits"] for week in weeks), [7] * 24 + [17] * 2)
+        for week in weeks:
+            start = date.fromisoformat(week["start"])
+            self.assertEqual(week["commits"], sum(daily.get(start + timedelta(days=i), 0)
+                                                 for i in range(7)))
+
+    def test_balanced_weeks_ties_use_latest_complete_window(self):
+        weeks = balanced_weekly_activity({}, date(2026, 10, 20))
+        self.assertEqual(len(weeks), 26)
+        self.assertEqual(weeks[-1], {"start": "2026-10-13", "commits": 0})
+
+    def test_weekly_activity_queries_all_alignments_and_excludes_today(self):
         result = {"total_count": 2, "incomplete_results": False, "items": [
             {"commit": {"author": {"date": "2026-04-20T00:00:00Z"}}},
             {"commit": {"author": {"date": "2026-10-18T23:59:59Z"}}},
+            {"commit": {"author": {"date": "2026-10-20T00:00:00Z"}}},
         ]}
         with patch("render_profile.github_api", return_value=result) as api:
             weeks = github_weekly_activity("example", today=date(2026, 10, 20))
         self.assertEqual(len(weeks), 26)
-        self.assertEqual(weeks[0], {"start": "2026-04-20", "commits": 1})
-        self.assertEqual(weeks[-1], {"start": "2026-10-12", "commits": 1})
-        self.assertIn("2026-04-20..2026-10-18", api.call_args.args[0])
+        self.assertEqual(weeks[0], {"start": "2026-04-21", "commits": 0})
+        self.assertEqual(weeks[-1], {"start": "2026-10-13", "commits": 1})
+        self.assertIn("2026-04-15..2026-10-19", api.call_args.args[0])
         self.assertEqual(api.call_count, 1)
 
     def test_weekly_activity_reads_every_result_page(self):
@@ -328,7 +349,7 @@ class GitHubStatsTests(unittest.TestCase):
         ]
         with patch("render_profile.github_api", side_effect=responses) as api:
             weeks = github_weekly_activity("example", today=date(2026, 10, 20))
-        self.assertEqual(weeks[-1]["commits"], 101)
+        self.assertEqual(max(week["commits"] for week in weeks), 101)
         self.assertEqual(sum(week["commits"] for week in weeks), 101)
         self.assertIn("page=2", api.call_args.args[0])
 

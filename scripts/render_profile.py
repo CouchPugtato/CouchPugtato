@@ -179,13 +179,31 @@ def github_commit_count(username):
     return result["total_count"]
 
 
+def balanced_weekly_activity(daily, today):
+    """Choose the least variable of seven complete 26-week alignments."""
+    candidates = []
+    for offset in range(7):
+        end = today - timedelta(days=offset)
+        first = end - timedelta(weeks=26)
+        weeks = [{"start": (first + timedelta(weeks=i)).isoformat(), "commits": 0}
+                 for i in range(26)]
+        for day, count in daily.items():
+            if first <= day < end:
+                weeks[(day - first).days // 7]["commits"] += count
+        counts = [week["commits"] for week in weeks]
+        # fixed sample size lets us compare variance without floating point rounding
+        score = 26 * sum(count * count for count in counts) - sum(counts) ** 2
+        candidates.append((score, offset, weeks))
+    # equal scores prefer the alignment ending most recently
+    return min(candidates, key=lambda candidate: candidate[:2])[2]
+
+
 def github_weekly_activity(username, today=None, include_monthly=False):
     """Aggregate weekly commits and optional six-month repository breadth from one search."""
     today = today or datetime.now(timezone.utc).date()
-    monday = today - timedelta(days=today.weekday())
-    first = monday - timedelta(weeks=26)
-    last = monday - timedelta(days=1)
-    weeks = [{"start": (first + timedelta(weeks=i)).isoformat(), "commits": 0} for i in range(26)]
+    first = today - timedelta(weeks=26, days=6)
+    last = today - timedelta(days=1)
+    daily = {}
     month_number = today.year * 12 + today.month - 1
     months = {}
     for index in range(5, -1, -1):
@@ -216,7 +234,7 @@ def github_weekly_activity(username, today=None, include_monthly=False):
                 stamp = item["commit"]["author"]["date"]
                 day = datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone(timezone.utc).date()
                 if first <= day <= last:
-                    weeks[(day - first).days // 7]["commits"] += 1
+                    daily[day] = daily.get(day, 0) + 1
                 month = day.strftime("%Y-%m")
                 if include_monthly and month in months and day <= today:
                     name = item["repository"]["full_name"]
@@ -225,6 +243,7 @@ def github_weekly_activity(username, today=None, include_monthly=False):
                     record["commits"] += 1
                     record["last_commit"] = max(record["last_commit"], day.isoformat())
     fetch_window(query_first, query_last)
+    weeks = balanced_weekly_activity(daily, today)
     if include_monthly:
         monthly = [{"month": month, "repositories": len(repos),
                     "partial": month == today.strftime("%Y-%m"),
