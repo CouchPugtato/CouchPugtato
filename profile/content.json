@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,061",
+      "value": "1,069",
       "label": "COMMITS"
     },
     {
@@ -28,8 +28,8 @@
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
     "Python": 2690352,
-    "JavaScript": 2047310,
-    "C": 1956646,
+    "JavaScript": 2188989,
+    "C": 2116624,
     "Rust": 695129,
     "Go": 318022,
     "Java": 147226,
@@ -38,7 +38,7 @@
     "Lua": 24018,
     "PowerShell": 22855,
     "NSIS": 12496,
-    "CMake": 10621,
+    "CMake": 11044,
     "C++": 9884,
     "TypeScript": 5158,
     "Dockerfile": 334,
@@ -260,9 +260,14 @@
       "partial": true,
       "items": [
         {
+          "name": "CouchPugtato/Statfolio-5e",
+          "last_commit": "2026-10-27",
+          "commits": 43
+        },
+        {
           "name": "CouchPugtato/Project-Porygon",
           "last_commit": "2026-10-27",
-          "commits": 23
+          "commits": 30
         },
         {
           "name": "CouchPugtato/Vortex",
@@ -273,11 +278,6 @@
           "name": "CouchPugtato/CouchPugtato",
           "last_commit": "2026-10-26",
           "commits": 32
-        },
-        {
-          "name": "CouchPugtato/Statfolio-5e",
-          "last_commit": "2026-10-25",
-          "commits": 42
         },
         {
           "name": "CouchPugtato/Rep-Count",
