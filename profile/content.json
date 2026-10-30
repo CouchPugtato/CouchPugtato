@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,083",
+      "value": "1,084",
       "label": "COMMITS"
     },
     {
@@ -27,8 +27,8 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
+    "JavaScript": 2696577,
     "Python": 2690352,
-    "JavaScript": 2627397,
     "C": 2129777,
     "Rust": 695129,
     "Go": 318022,
@@ -64,108 +64,108 @@
   },
   "weekly_activity": [
     {
-      "start": "2026-04-24",
+      "start": "2026-04-25",
       "commits": 7
     },
     {
-      "start": "2026-05-01",
+      "start": "2026-05-02",
       "commits": 1
     },
     {
-      "start": "2026-05-08",
+      "start": "2026-05-09",
       "commits": 0
     },
     {
-      "start": "2026-05-15",
+      "start": "2026-05-16",
       "commits": 11
     },
     {
-      "start": "2026-05-22",
+      "start": "2026-05-23",
       "commits": 0
     },
     {
-      "start": "2026-05-29",
+      "start": "2026-05-30",
       "commits": 9
     },
     {
-      "start": "2026-06-05",
-      "commits": 6
-    },
-    {
-      "start": "2026-06-12",
-      "commits": 18
-    },
-    {
-      "start": "2026-06-19",
-      "commits": 34
-    },
-    {
-      "start": "2026-06-26",
+      "start": "2026-06-06",
       "commits": 14
     },
     {
-      "start": "2026-07-03",
-      "commits": 5
-    },
-    {
-      "start": "2026-07-10",
-      "commits": 7
-    },
-    {
-      "start": "2026-07-17",
-      "commits": 13
-    },
-    {
-      "start": "2026-07-24",
-      "commits": 2
-    },
-    {
-      "start": "2026-07-31",
-      "commits": 0
-    },
-    {
-      "start": "2026-08-07",
-      "commits": 22
-    },
-    {
-      "start": "2026-08-14",
+      "start": "2026-06-13",
       "commits": 11
     },
     {
-      "start": "2026-08-21",
-      "commits": 25
+      "start": "2026-06-20",
+      "commits": 39
     },
     {
-      "start": "2026-08-28",
-      "commits": 27
-    },
-    {
-      "start": "2026-09-04",
-      "commits": 13
-    },
-    {
-      "start": "2026-09-11",
-      "commits": 25
-    },
-    {
-      "start": "2026-09-18",
-      "commits": 5
-    },
-    {
-      "start": "2026-09-25",
-      "commits": 6
-    },
-    {
-      "start": "2026-10-02",
+      "start": "2026-06-27",
       "commits": 8
     },
     {
-      "start": "2026-10-09",
-      "commits": 32
+      "start": "2026-07-04",
+      "commits": 5
     },
     {
-      "start": "2026-10-16",
-      "commits": 61
+      "start": "2026-07-11",
+      "commits": 13
+    },
+    {
+      "start": "2026-07-18",
+      "commits": 9
+    },
+    {
+      "start": "2026-07-25",
+      "commits": 0
+    },
+    {
+      "start": "2026-08-01",
+      "commits": 5
+    },
+    {
+      "start": "2026-08-08",
+      "commits": 28
+    },
+    {
+      "start": "2026-08-15",
+      "commits": 3
+    },
+    {
+      "start": "2026-08-22",
+      "commits": 22
+    },
+    {
+      "start": "2026-08-29",
+      "commits": 29
+    },
+    {
+      "start": "2026-09-05",
+      "commits": 14
+    },
+    {
+      "start": "2026-09-12",
+      "commits": 22
+    },
+    {
+      "start": "2026-09-19",
+      "commits": 11
+    },
+    {
+      "start": "2026-09-26",
+      "commits": 7
+    },
+    {
+      "start": "2026-10-03",
+      "commits": 1
+    },
+    {
+      "start": "2026-10-10",
+      "commits": 36
+    },
+    {
+      "start": "2026-10-17",
+      "commits": 58
     }
   ],
   "monthly_repositories": [
@@ -261,8 +261,8 @@
       "items": [
         {
           "name": "CouchPugtato/Project-Porygon",
-          "last_commit": "2026-10-29",
-          "commits": 44
+          "last_commit": "2026-10-30",
+          "commits": 45
         },
         {
           "name": "CouchPugtato/Statfolio-5e",
