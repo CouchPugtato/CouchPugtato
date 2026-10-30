@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,084",
+      "value": "1,086",
       "label": "COMMITS"
     },
     {
@@ -27,7 +27,7 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "JavaScript": 2696577,
+    "JavaScript": 2734358,
     "Python": 2690352,
     "C": 2129777,
     "Rust": 695129,
@@ -262,7 +262,7 @@
         {
           "name": "CouchPugtato/Project-Porygon",
           "last_commit": "2026-10-30",
-          "commits": 45
+          "commits": 47
         },
         {
           "name": "CouchPugtato/Statfolio-5e",
