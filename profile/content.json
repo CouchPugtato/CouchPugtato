@@ -64,128 +64,111 @@
   },
   "weekly_activity": [
     {
-      "start": "2026-04-26",
+      "start": "2026-04-27",
       "commits": 0
     },
     {
-      "start": "2026-05-03",
+      "start": "2026-05-04",
       "commits": 1
     },
     {
-      "start": "2026-05-10",
-      "commits": 0
-    },
-    {
-      "start": "2026-05-17",
-      "commits": 11
-    },
-    {
-      "start": "2026-05-24",
-      "commits": 0
-    },
-    {
-      "start": "2026-05-31",
-      "commits": 9
-    },
-    {
-      "start": "2026-06-07",
-      "commits": 24
-    },
-    {
-      "start": "2026-06-14",
-      "commits": 1
-    },
-    {
-      "start": "2026-06-21",
-      "commits": 45
-    },
-    {
-      "start": "2026-06-28",
-      "commits": 2
-    },
-    {
-      "start": "2026-07-05",
-      "commits": 5
-    },
-    {
-      "start": "2026-07-12",
-      "commits": 16
-    },
-    {
-      "start": "2026-07-19",
-      "commits": 6
-    },
-    {
-      "start": "2026-07-26",
-      "commits": 0
-    },
-    {
-      "start": "2026-08-02",
-      "commits": 6
-    },
-    {
-      "start": "2026-08-09",
-      "commits": 27
-    },
-    {
-      "start": "2026-08-16",
-      "commits": 3
-    },
-    {
-      "start": "2026-08-23",
-      "commits": 22
-    },
-    {
-      "start": "2026-08-30",
-      "commits": 33
-    },
-    {
-      "start": "2026-09-06",
-      "commits": 12
-    },
-    {
-      "start": "2026-09-13",
-      "commits": 20
-    },
-    {
-      "start": "2026-09-20",
-      "commits": 11
-    },
-    {
-      "start": "2026-09-27",
+      "start": "2026-05-11",
       "commits": 7
     },
     {
-      "start": "2026-10-04",
-      "commits": 3
+      "start": "2026-05-18",
+      "commits": 4
     },
     {
-      "start": "2026-10-11",
-      "commits": 37
+      "start": "2026-05-25",
+      "commits": 2
     },
     {
-      "start": "2026-10-18",
-      "commits": 76
+      "start": "2026-06-01",
+      "commits": 9
+    },
+    {
+      "start": "2026-06-08",
+      "commits": 22
+    },
+    {
+      "start": "2026-06-15",
+      "commits": 8
+    },
+    {
+      "start": "2026-06-22",
+      "commits": 40
+    },
+    {
+      "start": "2026-06-29",
+      "commits": 0
+    },
+    {
+      "start": "2026-07-06",
+      "commits": 5
+    },
+    {
+      "start": "2026-07-13",
+      "commits": 17
+    },
+    {
+      "start": "2026-07-20",
+      "commits": 5
+    },
+    {
+      "start": "2026-07-27",
+      "commits": 0
+    },
+    {
+      "start": "2026-08-03",
+      "commits": 8
+    },
+    {
+      "start": "2026-08-10",
+      "commits": 25
+    },
+    {
+      "start": "2026-08-17",
+      "commits": 8
+    },
+    {
+      "start": "2026-08-24",
+      "commits": 17
+    },
+    {
+      "start": "2026-08-31",
+      "commits": 36
+    },
+    {
+      "start": "2026-09-07",
+      "commits": 19
+    },
+    {
+      "start": "2026-09-14",
+      "commits": 10
+    },
+    {
+      "start": "2026-09-21",
+      "commits": 11
+    },
+    {
+      "start": "2026-09-28",
+      "commits": 7
+    },
+    {
+      "start": "2026-10-05",
+      "commits": 6
+    },
+    {
+      "start": "2026-10-12",
+      "commits": 36
+    },
+    {
+      "start": "2026-10-19",
+      "commits": 92
     }
   ],
   "monthly_repositories": [
-    {
-      "month": "2026-05",
-      "repositories": 2,
-      "partial": false,
-      "items": [
-        {
-          "name": "CouchPugtato/Project-Porygon",
-          "last_commit": "2026-05-31",
-          "commits": 13
-        },
-        {
-          "name": "FRC-509/2026Rebuilt",
-          "last_commit": "2026-05-06",
-          "commits": 1
-        }
-      ]
-    },
     {
       "month": "2026-06",
       "repositories": 2,
@@ -257,7 +240,7 @@
     {
       "month": "2026-10",
       "repositories": 9,
-      "partial": true,
+      "partial": false,
       "items": [
         {
           "name": "CouchPugtato/Project-Porygon",
@@ -305,6 +288,12 @@
           "commits": 9
         }
       ]
+    },
+    {
+      "month": "2026-11",
+      "repositories": 0,
+      "partial": true,
+      "items": []
     }
   ],
   "repository_details": {
