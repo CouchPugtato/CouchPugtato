@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,142",
+      "value": "1,143",
       "label": "COMMITS"
     },
     {
@@ -27,7 +27,7 @@
   ],
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
-    "Python": 3438303,
+    "Python": 3442602,
     "JavaScript": 2734358,
     "C": 2129777,
     "Rust": 695129,
@@ -307,7 +307,7 @@
         {
           "name": "CouchPugtato/Pokemon-Nuzlocke-Agent-Harness",
           "last_commit": "2026-11-12",
-          "commits": 32
+          "commits": 33
         }
       ]
     }
