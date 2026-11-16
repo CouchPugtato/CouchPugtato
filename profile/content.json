@@ -9,7 +9,7 @@
   "github_username": "CouchPugtato",
   "stats": [
     {
-      "value": "1,143",
+      "value": "1,145",
       "label": "COMMITS"
     },
     {
@@ -28,7 +28,7 @@
   "linkedin_url": "https://www.linkedin.com/in/dylanaulson/",
   "languages": {
     "Python": 3442602,
-    "JavaScript": 2734358,
+    "JavaScript": 2865034,
     "C": 2129777,
     "Rust": 695129,
     "Go": 318022,
@@ -301,9 +301,14 @@
     },
     {
       "month": "2026-11",
-      "repositories": 1,
+      "repositories": 2,
       "partial": true,
       "items": [
+        {
+          "name": "CouchPugtato/Project-Porygon",
+          "last_commit": "2026-11-16",
+          "commits": 2
+        },
         {
           "name": "CouchPugtato/Pokemon-Nuzlocke-Agent-Harness",
           "last_commit": "2026-11-12",
