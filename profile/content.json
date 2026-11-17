@@ -64,10 +64,6 @@
   },
   "weekly_activity": [
     {
-      "start": "2026-05-12",
-      "commits": 11
-    },
-    {
       "start": "2026-05-19",
       "commits": 0
     },
@@ -166,6 +162,10 @@
     {
       "start": "2026-11-03",
       "commits": 24
+    },
+    {
+      "start": "2026-11-10",
+      "commits": 11
     }
   ],
   "monthly_repositories": [
